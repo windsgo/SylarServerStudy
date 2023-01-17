@@ -1,17 +1,35 @@
 #include "log.h"
+#include "util.h"
 
 #include <iostream>
 #include <unistd.h>
 #include <cstdio>
 
 int main(int argc, char* argv[]) {
-    sylar::Logger::ptr logger = std::make_shared<sylar::Logger>("default");
+    sylar::Logger::ptr logger = std::make_shared<sylar::Logger>("root");
+    // logger->setLevel(sylar::LogLevel::ERROR);
     logger->addAppender(sylar::LogAppender::ptr(new sylar::StdoutLogAppender));
-    logger->addAppender(sylar::LogAppender::ptr(new sylar::FileLogAppender("aa.log")));
+    auto file_appender = std::make_shared<sylar::FileLogAppender>("aa.log");
+    logger->addAppender(file_appender);
 
-    sylar::LogEvent::ptr event = std::make_shared<sylar::LogEvent>(__FILE__, __LINE__, 0, 1, 2, time(0));
+    auto fmt = std::make_shared<sylar::LogFormatter>("[%p]%T%d:%T%m%n");
+    file_appender->setFormatter(fmt);
+    file_appender->setLevel(sylar::LogLevel::ERROR);
 
-    logger->log(sylar::LogLevel::Level::DEBUG, event);
+    // auto event = std::make_shared<sylar::LogEvent>(__FILE__, __LINE__, 0, sylar::GetThreadId(), sylar::GetFiberId(), time(0));
+
+    // logger->log(sylar::LogLevel::Level::DEBUG, event);
+
+    SYLAR_LOG_INFO(logger) << "test macro info";
+    SYLAR_LOG_DEBUG(logger) << "test macro debug";
+    SYLAR_LOG_WARN(logger) << "test macro warn";
+    SYLAR_LOG_ERROR(logger) << "test macro error";
+    SYLAR_LOG_FATAL(logger) << "test macro fatal";
+
+    SYLAR_LOG_FMT_DEBUG(logger, "test fmt, %s", "abc");
+
+    auto l = sylar::LoggerMgr::GetInstance()->getLogger("xx");
+    SYLAR_LOG_INFO(l) << "xxx";
 
     return 0;
 }

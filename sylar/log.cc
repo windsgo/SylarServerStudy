@@ -133,17 +133,60 @@ private:
     std::string m_string;
 };
 
-LogEvent::LogEvent(const char* file, int32_t line, uint32_t elapse
+class TabFormatItem : public LogFormatter::FormatItem {
+public:
+    TabFormatItem(const std::string& str = "") {}
+    void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
+        os << '\t';
+    }
+};
+
+LogEvent::LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, const char* file, int32_t line, uint32_t elapse
     , uint32_t thread_id, uint32_t fiber_id, uint64_t time) 
     : m_file(file), m_line(line), m_elapse(elapse)
-    , m_threadId(thread_id), m_fiberId(fiber_id), m_time(time) {
+    , m_threadId(thread_id), m_fiberId(fiber_id), m_time(time)
+    , m_logger(logger), m_level(level) {
 
 }
+
+LogEvent::~LogEvent() {
+
+}
+
+void LogEvent::format(const char* fmt, ...) {
+    va_list al;
+    va_start(al, fmt);
+    format(fmt, al);
+    va_end(al);
+}
+
+void LogEvent::format(const char* fmt, va_list al) {
+    char* buf = nullptr;
+    int len = vasprintf(&buf, fmt, al);
+    if (len != -1) {
+        m_ss << std::string(buf, len);
+        free(buf);
+    }
+}
+
+LogEventWrap::LogEventWrap(LogEvent::ptr event) 
+    :m_event(event) {
+
+}
+
+LogEventWrap::~LogEventWrap() {
+    m_event->getLogger()->log(m_event->getLevel(), m_event);
+}
+
+std::stringstream& LogEventWrap::getSS() {
+    return m_event->getSS();
+}
+
 
 Logger::Logger(const std::string& name) 
     : m_name(name) 
     , m_level(LogLevel::DEBUG){
-    m_formatter.reset(new LogFormatter("%d [%p] <%f:%l> %m%n"));
+    m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));
 }
 
 void Logger::addAppender(LogAppender::ptr appender) {
@@ -200,8 +243,8 @@ void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level leve
 
 FileLogAppender::FileLogAppender(const std::string& filename) 
     :m_filename(filename) {
-    if (reopen()) {
-        std::cout << "open success" << std::endl;
+    if (!reopen()) {
+        std::cout << "open log file failed:" << filename << std::endl;
     }
 }
 
@@ -210,7 +253,8 @@ bool FileLogAppender::reopen() {
         m_filestream.close();
     }
 
-    m_filestream.open(m_filename, std::ios::app);
+    // m_filestream.open(m_filename, std::ios::app);
+    m_filestream.open(m_filename);
     return !!m_filestream;
 }
 
@@ -439,7 +483,9 @@ void LogFormatter::init() {
         XX(n, NewLineFormatItem),
         XX(d, DateTimeFormatItem),
         XX(f, FilenameFormatItem),
-        XX(l, LineFormatItem)
+        XX(l, LineFormatItem),
+        XX(T, TabFormatItem),
+        XX(F, FiberIDFormatItem)
 
 #undef XX
     };
@@ -470,10 +516,26 @@ void LogFormatter::init() {
     %d -- time
     %f -- file name
     %l -- line number
+    %T -- Tab
+    %F -- Fiber id
     */
 
 }
 
+LoggerManager::LoggerManager() {
+    m_root.reset(new Logger("root"));
+
+    m_root->addAppender(std::make_shared<StdoutLogAppender>());
+}
+
+Logger::ptr LoggerManager::getLogger(const std::string& name) {
+    auto it = m_loggers.find(name);
+    return it == m_loggers.end() ? m_root : it->second;
+}
+    
+void LoggerManager::init() {
+
+}
 
 
 }

@@ -27,12 +27,13 @@ function(print_variable x)
 endfunction()
 
 set(LIB_SRC
-    utils/log.cc
+    sylar/log.cc
+    sylar/util.cc
 )
 
 add_library(sylar SHARED ${LIB_SRC})
 
 add_executable(test tests/test.cc)
 add_dependencies(test sylar)
-target_include_directories(test PUBLIC utils/)
+target_include_directories(test PUBLIC sylar/)
 target_link_libraries(test sylar)
