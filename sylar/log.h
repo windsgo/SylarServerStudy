@@ -13,6 +13,7 @@
 #include <cstdarg>
 
 #include "singleton.h"
+#include "util.h"
 
 #define SYLAR_LOG_LEVEL(logger, level)                                               \
     if (logger->getLevel() <= level)                                                 \
@@ -29,7 +30,7 @@
     if (logger->getLevel() <= level)                                                                           \
     sylar::LogEventWrap(std::make_shared<sylar::LogEvent>(logger, level, __FILE__, __LINE__, 0,                \
                                                           sylar::GetThreadId(), sylar::GetFiberId(), time(0))) \
-        .getEvent()                                                                                           \
+        .getEvent()                                                                                            \
         ->format(fmt, __VA_ARGS__)
 
 #define SYLAR_LOG_FMT_DEBUG(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::DEBUG, fmt, __VA_ARGS__)
@@ -37,6 +38,8 @@
 #define SYLAR_LOG_FMT_WARN(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::WARN, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_ERROR(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::ERROR, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_FATAL(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::FATAL, fmt, __VA_ARGS__)
+
+#define SYLAR_LOG_ROOT() sylar::LoggerMgr::GetInstance()->getRoot()
 
 namespace sylar {
 
@@ -120,7 +123,7 @@ public:
     class FormatItem {
     public:
         using ptr = std::shared_ptr<FormatItem>;
-        FormatItem(const std::string& fmt = "") {}
+        // FormatItem(/*const std::string& fmt = ""*/) {}
         virtual ~FormatItem() {}
         virtual void format(std::ostream& os, LogEvent::ptr event) = 0;
     };
@@ -204,11 +207,13 @@ public:
     Logger::ptr getLogger(const std::string& name);
     
     void init();
+    Logger::ptr getRoot() const { return m_root; }
+
 private:
     std::map<std::string, Logger::ptr> m_loggers;
     Logger::ptr m_root;
 };
 
-using LoggerMgr = sylar::Singleton<LoggerManager>;
+using LoggerMgr = sylar::Singleton<LoggerManager>; // 提供单例构造器
 
 }

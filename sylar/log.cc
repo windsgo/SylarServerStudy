@@ -30,7 +30,7 @@ const char* LogLevel::ToString(LogLevel::Level level) {
 
 class MessageFormatItem : public LogFormatter::FormatItem {
 public:
-    MessageFormatItem(const std::string& str = "") {}
+    MessageFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << event->getContent();
     }
@@ -38,7 +38,7 @@ public:
 
 class LevelFormatItem : public LogFormatter::FormatItem {
 public:
-    LevelFormatItem(const std::string& str = "") {}
+    LevelFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << LogLevel::ToString(event->getLevel());
     }
@@ -46,7 +46,7 @@ public:
 
 class ElapseFormatItem : public LogFormatter::FormatItem {
 public:
-    ElapseFormatItem(const std::string& str = "") {}
+    ElapseFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << event->getElapse();
     }
@@ -54,7 +54,7 @@ public:
 
 class NameFormatItem : public LogFormatter::FormatItem {
 public:
-    NameFormatItem(const std::string& str = "") {}
+    NameFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << event->getLogger()->getName();
     }
@@ -62,7 +62,7 @@ public:
 
 class ThreadIDFormatItem : public LogFormatter::FormatItem {
 public:
-    ThreadIDFormatItem(const std::string& str = "") {}
+    ThreadIDFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << event->getThreadId();
     }
@@ -70,7 +70,7 @@ public:
 
 class FiberIDFormatItem : public LogFormatter::FormatItem {
 public:
-    FiberIDFormatItem(const std::string& str = "") {}
+    FiberIDFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << event->getFiberId();
     }
@@ -98,7 +98,7 @@ private:
 
 class FilenameFormatItem : public LogFormatter::FormatItem {
 public:
-    FilenameFormatItem(const std::string& str = "") {}
+    FilenameFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << event->getFile();
     }
@@ -106,7 +106,7 @@ public:
 
 class LineFormatItem : public LogFormatter::FormatItem {
 public:
-    LineFormatItem(const std::string& str = "") {}
+    LineFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << event->getLine();
     }
@@ -114,7 +114,7 @@ public:
 
 class NewLineFormatItem : public LogFormatter::FormatItem {
 public:
-    NewLineFormatItem(const std::string& str = "") {}
+    NewLineFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << std::endl;
     }
@@ -123,7 +123,8 @@ public:
 class StringFormatItem : public LogFormatter::FormatItem {
 public:
     StringFormatItem(const std::string& str) 
-        : FormatItem(str), m_string(str) {
+        // : FormatItem(str)
+        : m_string(str) {
 
     }
     void format(std::ostream& os, LogEvent::ptr event) override {
@@ -135,7 +136,7 @@ private:
 
 class TabFormatItem : public LogFormatter::FormatItem {
 public:
-    TabFormatItem(const std::string& str = "") {}
+    TabFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << '\t';
     }
