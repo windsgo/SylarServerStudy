@@ -104,6 +104,7 @@ private:
 /*
 %m -- message
 %p -- level
+%P -- colored level(use in stdout)
 %r -- time after launch
 %c -- name of log
 %t -- thread id

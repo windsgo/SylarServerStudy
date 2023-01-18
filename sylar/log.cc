@@ -1,6 +1,7 @@
 #include "log.h"
 
 #include <map>
+#include <unordered_map>
 #include <functional>
 
 #include <cassert>
@@ -123,7 +124,6 @@ public:
 class StringFormatItem : public LogFormatter::FormatItem {
 public:
     StringFormatItem(const std::string& str) 
-        // : FormatItem(str)
         : m_string(str) {
 
     }
@@ -139,6 +139,26 @@ public:
     TabFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << '\t';
+    }
+};
+
+static std::unordered_map<LogLevel::Level, const char*> stdout_colors = {
+    {LogLevel::DEBUG, "\033[32m\033[1m"},
+    {LogLevel::INFO,  "\033[0m\033[1m "},
+    {LogLevel::WARN,  "\033[33m\033[1m "},
+    {LogLevel::ERROR, "\033[31m\033[1m"},
+    {LogLevel::FATAL, "\033[35m\033[1m"}
+};
+
+static const char *stdout_clearfmt = "\033[0m";
+
+// 带颜色的Level输出, 终端输出时用%P代替%p输出level颜色，给StdoutAppender设置
+class ColorLevelFormatItem : public LogFormatter::FormatItem {
+public:
+    ColorLevelFormatItem([[maybe_unused]] const std::string& str = "") {}
+    void format(std::ostream& os, LogEvent::ptr event) override {
+        auto level = event->getLevel();
+        os << stdout_colors[level] << LogLevel::ToString(level) << stdout_clearfmt;
     }
 };
 
@@ -497,7 +517,8 @@ void LogFormatter::init() {
         XX(f, FilenameFormatItem),
         XX(l, LineFormatItem),
         XX(T, TabFormatItem),
-        XX(F, FiberIDFormatItem)
+        XX(F, FiberIDFormatItem),
+        XX(P, ColorLevelFormatItem)
 
 #undef XX
     };
@@ -522,6 +543,7 @@ void LogFormatter::init() {
     /*
     %m -- message
     %p -- level
+    %P -- colored level(use in stdout)
     %r -- time after launch
     %c -- name of log
     %t -- thread id
@@ -537,7 +559,10 @@ void LogFormatter::init() {
 LoggerManager::LoggerManager() {
     m_root.reset(new Logger("root"));
 
-    m_root->addAppender(std::make_shared<StdoutLogAppender>());
+    auto appender = std::make_shared<StdoutLogAppender>();
+    auto formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%P]%T[%c]%T%f:%l%T%m%n");
+    appender->setFormatter(formatter);
+    m_root->addAppender(appender);
 }
 
 Logger::ptr LoggerManager::getLogger(const std::string& name) {
