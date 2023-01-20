@@ -7,7 +7,7 @@ set(CXX_STANDARD_REQUIRED 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
 
 if (NOT CMAKE_EXPORT_COMPILE_COMMANDS)
@@ -38,8 +38,15 @@ set(LIB_SRC
     sylar/config.cc
 )
 
+# YAML-CPP
+find_package(YAML-CPP REQUIRED)
+print_variable(YAML_CPP_INCLUDE_DIR)
+print_variable(YAML_CPP_LIBRARIES)
+print_variable(YAML-CPP_VERSION)
+
 add_library(sylar SHARED ${LIB_SRC})
-target_include_directories(sylar PUBLIC ${PROJECT_SOURCE_DIR}/sylar ${PROJECT_SOURCE_DIR})
+target_include_directories(sylar PUBLIC ${PROJECT_SOURCE_DIR}/sylar ${PROJECT_SOURCE_DIR} ${YAML_CPP_INCLUDE_DIR})
+target_link_libraries(sylar ${YAML_CPP_LIBRARIES})
 
 add_executable(test tests/test.cc)
 add_dependencies(test sylar)
