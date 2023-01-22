@@ -7,8 +7,10 @@
 #include <typeinfo>
 
 #include <boost/lexical_cast.hpp>
+#include <yaml-cpp/yaml.h>
 
-#include <log.h>
+#include "log.h"
+
 
 namespace sylar {
 
@@ -17,6 +19,7 @@ public:
     using ptr = std::shared_ptr<ConfigVarBase>;
     ConfigVarBase(const std::string& name, const std::string& description = "") 
         : m_name(name), m_description(description) {
+        std::transform(name.begin(), name.end(), m_name.begin(), ::tolower);
     }
     virtual ~ConfigVarBase() {}
 
@@ -31,8 +34,22 @@ protected:
     std::string m_description;
 };
 
-template <typename T>
-class ConfigVar : public ConfigVarBase {
+// 复杂类型支持
+// F: from_type, T: to_type
+template <typename F, typename T>
+class LexicalCast {
+public:
+    T operator() (const F& v) noexcept(false) {
+        return boost::lexical_cast<T>(v);
+    }
+};
+
+// T FromStr::operator()(const std::string&)
+// std::string ToStr::operator()(const T&)
+template <typename T, typename FromStr = LexicalCast<std::string, T>,
+          typename ToStr = LexicalCast<T, std::string>>
+class ConfigVar : public ConfigVarBase
+{
 public:
     using type = T;
     using ptr = std::shared_ptr<ConfigVar>;
@@ -42,7 +59,8 @@ public:
 
     std::string toString() override {
         try {
-            return boost::lexical_cast<std::string>(m_val);
+            // return boost::lexical_cast<std::string>(m_val);
+            return ToStr()(m_val);
         }
         catch (std::exception& e)
         {
@@ -54,7 +72,8 @@ public:
 
     bool fromString(const std::string &val) override {
         try {
-            m_val = boost::lexical_cast<T>(val);
+            // m_val = boost::lexical_cast<T>(val);
+            m_val = FromStr()(val);
             return true;
         }
         catch (std::exception &e)
@@ -86,7 +105,7 @@ public:
             return tmp;
         }
 
-        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._0123456789")
+        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789")
                 != std::string::npos) {
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name invalid: " << name;
             throw std::invalid_argument(name);
@@ -118,7 +137,14 @@ public:
         return ret;
     }
 
+    static void LoadFromYaml(const YAML::Node &root);
+
+    static ConfigVarBase::ptr LookupBase(const std::string &name);
+
 private:
+    Config() = default;
+    Config(const Config &) = delete;
+    Config(Config &&) = delete;
     static ConfigVarMap s_datas;
 };
 }
