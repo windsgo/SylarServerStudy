@@ -83,14 +83,27 @@ void test_config() {
     sylar::ConfigVar<float>::ptr g_float_value_config =
         sylar::Config::Lookup("system.value", (float)10.2f, "system value");
 
+    sylar::ConfigVar<std::vector<int> >::ptr g_int_vec_value_config =
+        sylar::Config::Lookup("system.int_vec", std::vector<int>{1, 2}, "system value");
+
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_int_value_config->getValue();
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before:" << g_float_value_config->getValue();
+
+    auto v = g_int_vec_value_config->getValue();
+    for (auto &i : v) {
+        SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before int_vec: " << i;
+    }
 
     YAML::Node root = YAML::LoadFile("conf/log.yml");
     sylar::Config::LoadFromYaml(root);
 
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after:" << g_int_value_config->getValue();
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after:" << g_float_value_config->getValue();
+
+    v = g_int_vec_value_config->getValue();
+    for (auto &i : v) {
+        SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after int_vec: " << i;
+    }
     // auto a = sylar::Config::Lookup<int>("system.port");
     // if (a)
     //     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << a->toString();

@@ -19,3 +19,6 @@ system:
   value: 15
   other:
     a: "a"
+  int_vec: 
+    - 10
+    - 30
