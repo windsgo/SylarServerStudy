@@ -31,7 +31,7 @@ void Config::LoadFromYaml(const YAML::Node &root) {
     ListAllMember("", root, all_nodes);
 
     for (auto& i : all_nodes) {
-        SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << i.first << i.second.IsScalar();
+        // SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << i.first << i.second.IsScalar();
 
         std::string key = i.first;
         if (key.empty()) {

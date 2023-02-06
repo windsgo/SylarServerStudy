@@ -22,3 +22,8 @@ system:
   int_vec: 
     - 10
     - 30
+  int_list: [20, 40, 50]
+  int_set: [6, 7, 6]
+  int_uset: [9, 0, 9]
+  str_int_map: {k: 2, p: 3}
+  str_int_umap: {uk: 22, up: 33}
