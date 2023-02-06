@@ -8,6 +8,8 @@
 #include <ctime>
 #include <cstring>
 
+#include <boost/filesystem.hpp>
+
 namespace sylar{
 
 const char* LogLevel::ToString(LogLevel::Level level) {
@@ -99,10 +101,29 @@ private:
 
 class FilenameFormatItem : public LogFormatter::FormatItem {
 public:
-    FilenameFormatItem([[maybe_unused]] const std::string& str = "") {}
+    FilenameFormatItem([[maybe_unused]] const std::string& str = "") : m_str(str) {}
     void format(std::ostream& os, LogEvent::ptr event) override {
-        os << event->getFile();
+        if (m_str == "s") {
+            // 简化目录层级输出
+            boost::filesystem::path p(std::string(event->getFile()));
+            std::string filename = p.filename().string();
+            std::stringstream ss;
+            p.remove_filename();
+            for (auto& s : p) {
+                ss << s.string()[0];
+                if (s.string() != "/") {
+                    ss << "/";
+                }
+            }
+            ss << filename;
+
+            os << ss.str();
+        } else {
+            os << event->getFile();
+        }
     }
+private:
+    std::string m_str;
 };
 
 class LineFormatItem : public LogFormatter::FormatItem {
@@ -560,7 +581,7 @@ LoggerManager::LoggerManager() {
     m_root.reset(new Logger("root"));
 
     auto appender = std::make_shared<StdoutLogAppender>();
-    auto formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%P]%T[%c]%T%f:%l%T%m%n");
+    auto formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%P]%T[%c]%T%f{s}:%l%T%m%n");
     appender->setFormatter(formatter);
     m_root->addAppender(appender);
 }

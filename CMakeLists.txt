@@ -43,7 +43,7 @@ print_variable(YAML_CPP_LIBRARIES)
 print_variable(YAML-CPP_VERSION)
 
 # Boost
-find_package(Boost REQUIRED COMPONENTS)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 print_variable(Boost_INCLUDE_DIR)
 print_variable(Boost_LIBRARIES)
 print_variable(Boost_VERSION)

@@ -33,6 +33,7 @@ public:
 
     virtual std::string toString() = 0;
     virtual bool fromString(const std::string &val) = 0;
+    virtual std::string getTypeName() const = 0;
 
 protected:
     std::string m_name;
@@ -282,13 +283,14 @@ public:
         catch (std::exception &e)
         {
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ConfigVar::fromString exception " 
-                << e.what() << " convert: string to " << typeid(m_val).name();
+                << e.what() << " convert: string to " << typeid(m_val).name() << val;
         }
         return false;
     }
 
     const T &getValue() const { return m_val; }
     void setValue(const T &v) { m_val = v; }
+    std::string getTypeName() const { return typeid(T).name(); }
 
 private:
     T m_val;
@@ -328,13 +330,14 @@ public:
             return nullptr;
         }
 
-        auto ret = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+        auto ret = std::dynamic_pointer_cast<ConfigVar<T>>(it->second); // 动态指针转换如果失败会返回nullptr
 
         // 增加这段，对同名的配置进行不同类型的覆盖时进行警告
         // 查找字段对应、但类型不正确时，dynamic_pointer_cast会转换失败返回nullptr
         if (ret == nullptr) {
-            SYLAR_LOG_WARN(SYLAR_LOG_ROOT()) << "Lookup name=" << name << ",typeid=" << typeid(T).name()
-                                             << ", type not correct";
+            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name=" << name << ",type=" << typeid(T).name()
+                                             << " not correct, real type=" << it->second->getTypeName() 
+                                             << ", value=" << it->second->toString();
         }
 
         return ret;
