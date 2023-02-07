@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <list>
 #include <typeinfo>
+#include <functional>
 
 #include <boost/lexical_cast.hpp>
 #include <yaml-cpp/yaml.h>
@@ -257,6 +258,8 @@ class ConfigVar : public ConfigVarBase
 public:
     using type = T;
     using ptr = std::shared_ptr<ConfigVar>;
+    using on_change_cb = std::function<void (const T&old_value, const T& new_value)>;
+
     ConfigVar(const std::string& name, const T& default_value, const std::string& description = "") 
         : ConfigVarBase(name, description), m_val(default_value) {
     }
@@ -277,7 +280,7 @@ public:
     bool fromString(const std::string &val) override {
         try {
             // m_val = boost::lexical_cast<T>(val);
-            m_val = FromStr()(val);
+            setValue(FromStr()(val));
             return true;
         }
         catch (std::exception &e)
@@ -289,11 +292,40 @@ public:
     }
 
     const T &getValue() const { return m_val; }
-    void setValue(const T &v) { m_val = v; }
+    void setValue(const T &v) { 
+        if (v == m_val) {
+            return;
+        }
+
+        for (auto& i : m_cbs) {
+            i.second(m_val, v);
+        }
+
+        m_val = v;
+    }
     std::string getTypeName() const { return typeid(T).name(); }
+
+    void addListener(uint64_t key, on_change_cb cb) {
+        m_cbs[key] = cb;
+    }
+
+    void delListener(uint64_t key) {
+        m_cbs.erase(key);
+    }
+
+    on_change_cb getListener(uint64_t key) const {
+        auto it = m_cbs.find(key);
+        return it == m_cbs.end() ? nullptr : it->second;
+    }
+
+    void clearListener() {
+        m_cbs.clear();
+    }
 
 private:
     T m_val;
+    // 变更回调函数组，uint64_t key，要求唯一，一般可以用hash
+    std::map<uint64_t, on_change_cb> m_cbs;
 };
 
 class Config {
@@ -317,7 +349,7 @@ public:
         }
 
         auto v = std::make_shared<ConfigVar<T>>(name, default_value, description);
-        s_datas[name] = v; // equal to the following line
+        GetDatas()[name] = v; // equal to the following line
         // s_datas[name] = std::dynamic_pointer_cast<ConfigVarBase>(v);
 
         return v;
@@ -325,8 +357,8 @@ public:
 
     template<typename T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
-        auto it = s_datas.find(name);
-        if (it == s_datas.end()) {
+        auto it = GetDatas().find(name);
+        if (it == GetDatas().end()) {
             return nullptr;
         }
 
@@ -351,6 +383,10 @@ private:
     Config() = default;
     Config(const Config &) = delete;
     Config(Config &&) = delete;
-    static ConfigVarMap s_datas;
+    
+    static ConfigVarMap& GetDatas() {
+        static ConfigVarMap s_datas;
+        return s_datas;
+    }
 };
 }

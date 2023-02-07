@@ -59,7 +59,7 @@ void print_yaml(const YAML::Node& node, int level) {
 
 void test_yaml() {
     try {
-        YAML::Node root = YAML::LoadFile("conf/log.yml");
+        YAML::Node root = YAML::LoadFile("conf/test.yml");
 
         // SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << root;
         // SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << root.Scalar();
@@ -136,7 +136,7 @@ void test_config() {
     XX_M(g_str_int_map_value_config, str_int_map, before);
     XX_M(g_str_int_umap_value_config, str_int_map, before);
 
-    YAML::Node root = YAML::LoadFile("conf/log.yml");
+    YAML::Node root = YAML::LoadFile("conf/test.yml");
     sylar::Config::LoadFromYaml(root);
 
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after:" << g_int_value_config->getValue();
@@ -177,6 +177,9 @@ public:
            << " sex = " << m_sex
            << "]";
         return ss.str();
+    }
+    bool operator==(const Person& rhs) const {
+        return m_name == rhs.m_name && m_age == rhs.m_age && m_sex == rhs.m_sex;
     }
 };
 
@@ -226,6 +229,10 @@ void test_class() {
             {{"group1", {Person(), Person()}}}
         }, "class vec_map");
 
+    g_person->addListener(10, [](const Person& old_value, const Person& new_value){
+        SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "g_person changed: old_value=" << old_value.toString() << " new_value=" << new_value.toString();
+    });
+
 #define XX_PM(g_var, prefix) \
     {\
         auto m = g_var->getValue(); \
@@ -238,7 +245,7 @@ void test_class() {
     XX_PM(g_person_map, "class.map before")
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before: " << g_person_vec_map->getValue().size() << '\n' << g_person_vec_map->toString();
 
-    YAML::Node root = YAML::LoadFile("conf/log.yml");
+    YAML::Node root = YAML::LoadFile("conf/test.yml");
     sylar::Config::LoadFromYaml(root);
 
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after : " << g_person->getValue().toString() << " - " << g_person->toString();
@@ -248,19 +255,32 @@ void test_class() {
 #undef XX_PM
 }
 
+void test_log() {
+    sylar::print_log_config_var();
+    YAML::Node root = YAML::LoadFile("conf/log.yml");
+    sylar::Config::LoadFromYaml(root);
+
+    sylar::print_log_config_var();
+
+    std::cout << sylar::LoggerMgr::GetInstance()->getLogger("system")->toYamlString() << std::endl;
+    std::cout << sylar::LoggerMgr::GetInstance()->getLogger("root")->toYamlString() << std::endl;
+}
+
 int main(int argc, char** argv) {
     init();
 
 
-    std::cout << "----------test_yaml()----------\n";
-    test_yaml();
-    std::cout << "----------test_config()----------\n";
-    test_config();
-    std::cout << "----------test_class()----------\n";
-    test_class();
+    // std::cout << "----------test_yaml()----------\n";
+    // test_yaml();
+    // std::cout << "----------test_config()----------\n";
+    // test_config();
+    // std::cout << "----------test_class()----------\n";
+    // test_class();
+
+    test_log();
+    
 
     // test yaml
-
 
     return 0;
 }

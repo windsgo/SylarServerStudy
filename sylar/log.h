@@ -34,16 +34,18 @@
         ->format(fmt, __VA_ARGS__)
 
 #define SYLAR_LOG_FMT_DEBUG(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::DEBUG, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_INFO(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::INFO, fmt, __VA_ARGS__)
-#define SYLAR_LOG_FMT_WARN(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::WARN, fmt, __VA_ARGS__)
+#define SYLAR_LOG_FMT_INFO(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::INFO,  fmt, __VA_ARGS__)
+#define SYLAR_LOG_FMT_WARN(logger, fmt, ...)  SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::WARN,  fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_ERROR(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::ERROR, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_FATAL(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::FATAL, fmt, __VA_ARGS__)
 
 #define SYLAR_LOG_ROOT() sylar::LoggerMgr::GetInstance()->getRoot()
+#define SYLAR_LOG_NAME(name) sylar::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace sylar {
 
 class Logger;
+class LoggerManager;
 
 class LogLevel {
 public:
@@ -52,10 +54,12 @@ public:
         INFO = 2,
         WARN = 3,
         ERROR = 4,
-        FATAL = 5
+        FATAL = 5,
+        UNKNOW = 6
     };
 
     static const char* ToString(LogLevel::Level level);
+    static LogLevel::Level FromString(const std::string& str);
 };
 
 class LogEvent {
@@ -130,9 +134,14 @@ public:
     };
 
     void init();
+
+    bool isError() const { return m_error; }
+
+    const std::string& getPattern() const { return m_pattern; }
 private:
     std::string m_pattern;
     std::vector<FormatItem::ptr> m_items;
+    bool m_error = false;
 
 };
 
@@ -143,6 +152,7 @@ public:
     virtual ~LogAppender() {}
 
     virtual void log(LogEvent::ptr event) = 0;
+    virtual std::string toYamlString() const = 0;
 
     void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
     LogFormatter::ptr getFormatter() const { return m_formatter; }
@@ -156,6 +166,7 @@ protected:
 
 
 class Logger : public std::enable_shared_from_this<Logger> {
+    friend class LoggerManager;
 public:
     using ptr = std::shared_ptr<Logger>;
     Logger(const std::string& name = "root");
@@ -172,21 +183,33 @@ public:
 
     void addAppender(LogAppender::ptr appender);
     void delAppender(LogAppender::ptr appender);
+    void clearAppenders();
+    std::list<LogAppender::ptr> getAppenders() { return m_appenders; }
+
     LogLevel::Level getLevel() const { return m_level; }
     void setLevel(LogLevel::Level level) { m_level = level; }
 
     const std::string& getName() const { return m_name; }
+
+    void setFormatter(LogFormatter::ptr val);
+    void setFormatter(const std::string& val);
+    LogFormatter::ptr getFormatter() const;
+
+    std::string toYamlString() const;
 private:
     std::string m_name;
     LogLevel::Level m_level; // when level >= m_level, log
     std::list<LogAppender::ptr> m_appenders;
     LogFormatter::ptr m_formatter; 
+
+    Logger::ptr m_root;
 };
 
 class StdoutLogAppender : public LogAppender {
 public:
     using ptr = std::shared_ptr<StdoutLogAppender>;
     void log(LogEvent::ptr event) override;
+    std::string toYamlString() const override; 
 private:
 };
 
@@ -194,9 +217,13 @@ class FileLogAppender : public LogAppender {
 public:
     using ptr = std::shared_ptr<FileLogAppender>;
     FileLogAppender(const std::string& filename);
+    ~FileLogAppender();
     void log(LogEvent::ptr event) override;
+    std::string toYamlString() const override; 
 
     bool reopen();
+
+    const std::string& getFilename() const { return m_filename; }
 private:
     std::string m_filename;
     std::ofstream m_filestream;
@@ -210,6 +237,10 @@ public:
     void init();
     Logger::ptr getRoot() const { return m_root; }
 
+    // void addLogger(Logger::ptr logger) {
+    //     m_loggers[logger->getName()] = logger;
+    // }
+
 private:
     std::map<std::string, Logger::ptr> m_loggers;
     Logger::ptr m_root;
@@ -217,4 +248,5 @@ private:
 
 using LoggerMgr = sylar::Singleton<LoggerManager>; // 提供单例构造器
 
+void print_log_config_var(); // 打印logs信息
 }

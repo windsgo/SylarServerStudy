@@ -2,62 +2,20 @@ logs:
   - name: root
     level: info
     formatter: "%d%T%m%n"
-    appender:
+    appenders:
       - type: FileLogAppender
-        file: log.txt
+        level: debug
+        file: logroot.txt
       - type: StdoutLogAppender
+        formatter: "%d%T[%P]:%T%m%n"
+        level: debug
   - name: system
-    lebel: debug
-    formatter: "%d%T%m%n"
-    appender:
+    level: debug
+    formatter: "%d%T%c%T%m%n"
+    appenders:
       - type: FileLogAppender
-        file: log.txt
+        level: info
+        file: logsys.txt
       - type: StdoutLogAppender
-
-system:
-  port: 9900
-  value: 15
-  other:
-    a: "a"
-  int_vec: 
-    - 10
-    - 30
-  int_list: [20, 40, 50]
-  int_set: [6, 7, 6]
-  int_uset: [9, 0, 9]
-  str_int_map: {k: 2, p: 3}
-  str_int_umap: {uk: 22, up: 33}
-
-class:
-  person:
-    name: "sylar"
-    age: 18
-    sex: true
-  map:
-    person1:
-      name: "person01"
-      age: 1
-      sex: true
-    person2:
-      name: "person02"
-      age: 2
-      sex: false
-  vec_map:
-    group1:
-      - p1:
-        name: "p01"
-        age: 11
-        sex: true
-      - p2:
-        name: "p02"
-        age: 12
-        sex: false
-    group2:
-      - p3:
-        name: "p03"
-        age: 11
-        sex: true
-      - p4:
-        name: "p04"
-        age: 12
-        sex: false
+        formatter: "%d%T[%P][%c]:%T%m%n"
+        level: debug
