@@ -241,6 +241,8 @@ public:
     //     m_loggers[logger->getName()] = logger;
     // }
 
+    std::string toYamlString() const;
+
 private:
     std::map<std::string, Logger::ptr> m_loggers;
     Logger::ptr m_root;

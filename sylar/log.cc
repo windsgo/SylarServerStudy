@@ -368,7 +368,7 @@ std::string StdoutLogAppender::toYamlString() const {
     YAML::Node node;
     node["type"] = "StdoutLogAppender";
     node["level"] = LogLevel::ToString(m_level);
-    if (m_formatter || !m_formatter->getPattern().empty()) {
+    if (m_formatter) {
         node["formatter"] = m_formatter->getPattern();
     }
     std::stringstream ss;
@@ -385,10 +385,10 @@ FileLogAppender::FileLogAppender(const std::string& filename)
 
 std::string FileLogAppender::toYamlString() const {
     YAML::Node node;
-    node["type"] = "StdoutLogAppender";
+    node["type"] = "FileLogAppender";
     node["level"] = LogLevel::ToString(m_level);
     node["file"] = m_filename;
-    if (m_formatter || !m_formatter->getPattern().empty()) {
+    if (m_formatter) {
         node["formatter"] = m_formatter->getPattern();
     }
     std::stringstream ss;
@@ -696,6 +696,8 @@ LoggerManager::LoggerManager() {
     file_appender->setFormatter(file_formatter);
     m_root->addAppender(file_appender);
 
+    m_loggers[m_root->getName()] = m_root;
+
     init();
 }
 
@@ -992,7 +994,8 @@ struct LogIniter {
                     }
 
                     ap->setLevel(a.level);
-                    ap->setFormatter(std::make_shared<LogFormatter>(a.formatter));
+                    if (!a.formatter.empty())
+                        ap->setFormatter(std::make_shared<LogFormatter>(a.formatter));
                     
                     logger->addAppender(ap);
                 }
@@ -1035,8 +1038,8 @@ struct LogIniter {
             //         << LogLevel::ToString(i.second->getLevel());
             // }
 
-            SYLAR_LOG_DEBUG(SYLAR_LOG_NAME("system")) << "hahaha";
-            SYLAR_LOG_INFO(SYLAR_LOG_NAME("root")) << "hahahaoo";
+            // SYLAR_LOG_DEBUG(SYLAR_LOG_NAME("system")) << "hahaha";
+            // SYLAR_LOG_INFO(SYLAR_LOG_NAME("root")) << "hahahaoo";
 
         });
     }
@@ -1047,6 +1050,17 @@ static LogIniter __log_init;
 
 void LoggerManager::init() {
 
+}
+
+std::string LoggerManager::toYamlString() const {
+    YAML::Node node;
+    for (auto& i : m_loggers) {
+        node.push_back(YAML::Load(i.second->toYamlString()));
+    }
+
+    std::stringstream ss;
+    ss << node;
+    return ss.str();
 }
 
 void print_log_config_var() {

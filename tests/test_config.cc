@@ -256,14 +256,20 @@ void test_class() {
 }
 
 void test_log() {
-    sylar::print_log_config_var();
+    std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
     YAML::Node root = YAML::LoadFile("conf/log.yml");
     sylar::Config::LoadFromYaml(root);
 
-    sylar::print_log_config_var();
+    // sylar::print_log_config_var();
 
-    std::cout << sylar::LoggerMgr::GetInstance()->getLogger("system")->toYamlString() << std::endl;
-    std::cout << sylar::LoggerMgr::GetInstance()->getLogger("root")->toYamlString() << std::endl;
+    // std::cout << sylar::LoggerMgr::GetInstance()->getLogger("system")->toYamlString() << std::endl;
+    // std::cout << sylar::LoggerMgr::GetInstance()->getLogger("root")->toYamlString() << std::endl;
+    std::cout << "---------\n";
+    std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+
+    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "new root";
+    SYLAR_LOG_INFO(SYLAR_LOG_NAME("system")) << "new system";
+    SYLAR_LOG_INFO(SYLAR_LOG_NAME("other")) << "new other";
 }
 
 int main(int argc, char** argv) {

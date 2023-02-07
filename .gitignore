@@ -6,4 +6,4 @@ bin/
 .vscode/**
 
 *.log
-log.txt
+*.txt

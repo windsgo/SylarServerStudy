@@ -5,17 +5,17 @@ logs:
     appenders:
       - type: FileLogAppender
         level: debug
+        formatter: "%d{%Y-%m-%d %H:%M:%S}%T[%p]%T%f{s}:%l:%T%m%n"
         file: logroot.txt
       - type: StdoutLogAppender
-        formatter: "%d%T[%P]:%T%m%n"
+        formatter: "%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%P]%T[%c]%T%f:%l%T%m%n"
         level: debug
   - name: system
     level: debug
-    formatter: "%d%T%c%T%m%n"
+    formatter: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
         level: info
         file: logsys.txt
       - type: StdoutLogAppender
-        formatter: "%d%T[%P][%c]:%T%m%n"
         level: debug
