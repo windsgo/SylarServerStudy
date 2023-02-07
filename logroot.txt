@@ -1,2 +1,0 @@
-2023-02-07 19:45:34	[INFO]	/h/w/D/c/S/t/test_config.cc:270:	new root
-2023-02-07 19:45:34	[INFO]	/h/w/D/c/S/t/test_config.cc:272:	new other
