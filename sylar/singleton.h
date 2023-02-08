@@ -1,6 +1,13 @@
 #pragma once
 #include <memory>
 
+#define SYLAR_DISABLE_COPY(CLASS) \
+private: \
+    CLASS(const CLASS&) = delete; \
+    CLASS(CLASS&&) = delete; \
+    CLASS& operator=(const CLASS&) = delete; \
+    CLASS& operator=(CLASS&&) = delete; \
+
 namespace sylar {
 
 template<class T, class X = void, int N = 0>

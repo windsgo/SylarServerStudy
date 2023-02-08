@@ -4,6 +4,8 @@
 
 #include "yaml-cpp/yaml.h"
 
+#include "sylar/thread.h"
+
 auto logger_test = std::make_shared<sylar::Logger>("test");
 auto fmt = std::make_shared<sylar::LogFormatter>("%m%n");
 auto appender = std::make_shared<sylar::StdoutLogAppender>();
@@ -273,8 +275,8 @@ void test_log() {
 }
 
 int main(int argc, char** argv) {
+    std::cout << "test_config.cc main() entry" << std::endl;
     init();
-
 
     // std::cout << "----------test_yaml()----------\n";
     // test_yaml();
@@ -285,6 +287,9 @@ int main(int argc, char** argv) {
 
     test_log();
     
+
+    // sylar::Thread t([](){std::cout << "a" << std::endl;}, "aaa");
+
 
     // test yaml
 

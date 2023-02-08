@@ -4,6 +4,7 @@ set(LIB_SRC
     log.cc
     util.cc
     config.cc
+    thread.cc
 )
 
 add_library(sylar SHARED ${LIB_SRC})
@@ -13,4 +14,4 @@ target_include_directories(sylar PUBLIC
     ${YAML_CPP_INCLUDE_DIR}
     ${Boost_INCLUDE_DIR}
 )
-target_link_libraries(sylar ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(sylar ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES} pthread)

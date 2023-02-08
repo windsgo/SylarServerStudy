@@ -698,12 +698,12 @@ LoggerManager::LoggerManager() {
 
     // root日志器的初始化
     auto appender = std::make_shared<StdoutLogAppender>();
-    auto formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%P]%T[%c]%T%f{s}:%l%T%m%n");
+    auto formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%P]%T[%c](dft)%T%f{s}:%l%T%m%n");
     appender->setFormatter(formatter);
     m_root->addAppender(appender);
 
     auto file_appender = std::make_shared<FileLogAppender>("root.log");
-    auto file_formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T[%p]%T%f{s}:%l:%T%m%n");
+    auto file_formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T[%p]%T%f{s}:%l(dft):%T%m%n");
     file_appender->setFormatter(file_formatter);
     m_root->addAppender(file_appender);
 
@@ -966,6 +966,8 @@ public:
 
 struct LogIniter {
     LogIniter() {
+        SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << "LogIniter() construction";
+
         g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value)
         {
             SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << "on_logger_conf_changed!";
@@ -1013,23 +1015,6 @@ struct LogIniter {
                     logger->addAppender(ap);
                 }
 
-                // SYLAR_LOG_NAME(logger->getName()) = logger;
-                
-                // LoggerMgr::GetInstance()->addLogger(logger);
-
-                // SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << logger->getName() << " - " 
-                //         << LogLevel::ToString(logger->getLevel()) << " - "
-                //         << logger->getAppenders().size() << " - "
-                //         << logger->getFormatter()->getPattern() << " - "
-                //         << logger->getFormatter()->isError();
-
-                // for (auto& i : logger->getAppenders()) {
-                //     SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << i->getFormatter()->getPattern() << " - " 
-                //         << LogLevel::ToString(i->getLevel()) << " - ";
-                //     if (std::dynamic_pointer_cast<FileLogAppender>(i)) {
-                //         SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << std::dynamic_pointer_cast<FileLogAppender>(i)->getFilename();
-                //     }
-                // }
             }
 
             for (auto& i : old_value) {
@@ -1042,17 +1027,6 @@ struct LogIniter {
                     logger->clearAppenders();
                 }
             }
-
-
-            // SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << old_value.size();
-            // SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << new_value.size();
-            // for (auto& i : LoggerMgr::GetInstance()->m_loggers) {
-            //     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << i.first << " - " 
-            //         << LogLevel::ToString(i.second->getLevel());
-            // }
-
-            // SYLAR_LOG_DEBUG(SYLAR_LOG_NAME("system")) << "hahaha";
-            // SYLAR_LOG_INFO(SYLAR_LOG_NAME("root")) << "hahahaoo";
 
         });
     }

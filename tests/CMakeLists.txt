@@ -19,3 +19,15 @@ target_link_libraries(test_config
     sylar
     ${YAML_CPP_LIBRARIES}
 )
+
+add_executable(test_thread test_thread.cc)
+add_dependencies(test_thread sylar)
+target_include_directories(test_thread PUBLIC 
+    ${PROJECT_SOURCE_DIR}
+    ${YAML_CPP_INCLUDE_DIR}
+)
+target_link_libraries(test_thread 
+    sylar
+    ${YAML_CPP_LIBRARIES}
+    pthread
+)

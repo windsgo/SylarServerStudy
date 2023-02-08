@@ -298,7 +298,7 @@ public:
         }
 
         for (auto& i : m_cbs) {
-            i.second(m_val, v);
+            i.second(m_val, v); // 回调，通知观察者配置发生改变
         }
 
         m_val = v;
