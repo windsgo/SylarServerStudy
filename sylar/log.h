@@ -50,12 +50,12 @@ class LoggerManager;
 class LogLevel {
 public:
     enum Level {
+        UNKNOW = 0,
         DEBUG = 1,
         INFO = 2,
         WARN = 3,
         ERROR = 4,
-        FATAL = 5,
-        UNKNOW = 6
+        FATAL = 5
     };
 
     static const char* ToString(LogLevel::Level level);
@@ -154,14 +154,17 @@ public:
     virtual void log(LogEvent::ptr event) = 0;
     virtual std::string toYamlString() const = 0;
 
-    void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
+    void setFormatter(LogFormatter::ptr val) { m_formatter = val; m_has_formatter = true; }
     LogFormatter::ptr getFormatter() const { return m_formatter; }
 
     void setLevel(LogLevel::Level level) { m_level = level; }
     LogLevel::Level getLevel() const { return m_level; }
+
+    bool hasFormatter() const { return m_has_formatter; }
 protected:
     LogLevel::Level m_level = LogLevel::DEBUG;
     LogFormatter::ptr m_formatter;
+    bool m_has_formatter = false;
 };
 
 

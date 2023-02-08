@@ -21,20 +21,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
+include(sylar/utils.cmake)
 
 add_compile_options(-Wall -Werror)
-
-function(print_variable x)
-    list(LENGTH ${x} len)
-    if (${len} GREATER 1 AND ${len} LESS 10)
-        message(STATUS "[*PRINT*] \${${x}}:")
-        foreach(_x ${${x}})
-            message(STATUS "          ${_x}")
-        endforeach()
-    else()
-        message(STATUS "[*PRINT*] \${${x}}:${${x}}")
-    endif()
-endfunction()
 
 # YAML-CPP
 find_package(YAML-CPP REQUIRED)

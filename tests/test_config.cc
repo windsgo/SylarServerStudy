@@ -259,12 +259,12 @@ void test_log() {
     std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
     YAML::Node root = YAML::LoadFile("conf/log.yml");
     sylar::Config::LoadFromYaml(root);
-
-    // sylar::print_log_config_var();
+    std::cout << "---------print_log_config_var()\n";
+    sylar::print_log_config_var();
 
     // std::cout << sylar::LoggerMgr::GetInstance()->getLogger("system")->toYamlString() << std::endl;
     // std::cout << sylar::LoggerMgr::GetInstance()->getLogger("root")->toYamlString() << std::endl;
-    std::cout << "---------\n";
+    std::cout << "---------toYamlString()\n";
     std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
 
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "new root";

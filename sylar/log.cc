@@ -137,6 +137,8 @@ public:
             ss << filename;
 
             os << ss.str();
+        } else if (m_str == "r") {
+            os << boost::filesystem::relative(std::string(event->getFile())).string();
         } else {
             os << event->getFile();
         }
@@ -280,6 +282,12 @@ void Logger::setFormatter(LogFormatter::ptr val) {
         return;
     
     m_formatter = val;
+
+    for (auto& i : m_appenders) {
+        if (!i->hasFormatter()) {
+            i->setFormatter(val);
+        }
+    }
 }
 
 void Logger::setFormatter(const std::string& val) {
@@ -291,7 +299,8 @@ void Logger::setFormatter(const std::string& val) {
         return;
     }
 
-    m_formatter = new_val;
+    // m_formatter = new_val;
+    setFormatter(new_val);
 }
 
 LogFormatter::ptr Logger::getFormatter() const {
@@ -367,7 +376,8 @@ void StdoutLogAppender::log(LogEvent::ptr event)  {
 std::string StdoutLogAppender::toYamlString() const {
     YAML::Node node;
     node["type"] = "StdoutLogAppender";
-    node["level"] = LogLevel::ToString(m_level);
+    if (m_level != LogLevel::Level::UNKNOW)
+        node["level"] = LogLevel::ToString(m_level);
     if (m_formatter) {
         node["formatter"] = m_formatter->getPattern();
     }
@@ -386,7 +396,8 @@ FileLogAppender::FileLogAppender(const std::string& filename)
 std::string FileLogAppender::toYamlString() const {
     YAML::Node node;
     node["type"] = "FileLogAppender";
-    node["level"] = LogLevel::ToString(m_level);
+    if (m_level != LogLevel::Level::UNKNOW)
+        node["level"] = LogLevel::ToString(m_level);
     node["file"] = m_filename;
     if (m_formatter) {
         node["formatter"] = m_formatter->getPattern();
@@ -898,7 +909,8 @@ private:
         // level
         if (!appender_node["level"].IsDefined()) {
             std::cout << "logappender config warn: level not defined\n" << appender_node << std::endl;
-            lad.level = LogLevel::Level::DEBUG;
+            // lad.level = LogLevel::Level::DEBUG; 
+            // 保留UNKNOW
         } else {
             if (!appender_node["level"].IsScalar()) {
                 std::cout << "logappender config error: level not scalar\n" << appender_node << std::endl;
@@ -940,7 +952,8 @@ public:
                 appenders_node[n]["file"] = a.file;
             if (!a.formatter.empty())
                 appenders_node[n]["formatter"] = a.formatter;
-            appenders_node[n]["level"] = LogLevel::ToString(a.level);
+            if (a.level != LogLevel::Level::UNKNOW)
+                appenders_node[n]["level"] = LogLevel::ToString(a.level);
             appenders_node[n]["type"] = LogAppenderDefine::TypeToString(a.type);
         }
         node["appenders"] = appenders_node;
