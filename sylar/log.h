@@ -14,6 +14,7 @@
 
 #include "singleton.h"
 #include "util.h"
+#include "thread.h"
 
 #define SYLAR_LOG_LEVEL(logger, level)                                               \
     if (logger->getLevel() <= level)                                                 \
@@ -149,21 +150,23 @@ private:
 class LogAppender {
 public:
     using ptr = std::shared_ptr<LogAppender>;
+    using MutexType = Mutex;
     virtual ~LogAppender() {}
 
     virtual void log(LogEvent::ptr event) = 0;
     virtual std::string toYamlString() const = 0;
 
-    void setFormatter(LogFormatter::ptr val) { m_formatter = val; m_has_formatter = true; }
-    LogFormatter::ptr getFormatter() const { return m_formatter; }
+    void setFormatter(LogFormatter::ptr val);
+    LogFormatter::ptr getFormatter() const;
 
     void setLevel(LogLevel::Level level) { m_level = level; }
     LogLevel::Level getLevel() const { return m_level; }
 
-    bool hasFormatter() const { return m_has_formatter; }
+    bool hasFormatter() const { MutexType::Lock lock(m_mutex); return m_has_formatter; }
 protected:
     LogLevel::Level m_level = LogLevel::DEBUG;
     LogFormatter::ptr m_formatter;
+	mutable MutexType m_mutex;
     bool m_has_formatter = false;
 };
 
@@ -172,6 +175,7 @@ class Logger : public std::enable_shared_from_this<Logger> {
     friend class LoggerManager;
 public:
     using ptr = std::shared_ptr<Logger>;
+    using MutexType = Mutex;
     Logger(const std::string& name = "root");
 
     void log(LogEvent::ptr event);
@@ -204,7 +208,7 @@ private:
     LogLevel::Level m_level; // when level >= m_level, log
     std::list<LogAppender::ptr> m_appenders;
     LogFormatter::ptr m_formatter; 
-
+    mutable MutexType m_mutex;
     Logger::ptr m_root;
 };
 
@@ -235,6 +239,7 @@ private:
 class LoggerManager {
 public:
     LoggerManager();
+    using MutexType = Mutex;
     Logger::ptr getLogger(const std::string& name);
     
     void init();
@@ -247,6 +252,7 @@ public:
     std::string toYamlString() const;
 
 private:
+    mutable MutexType m_mutex;
     std::map<std::string, Logger::ptr> m_loggers;
     Logger::ptr m_root;
 };

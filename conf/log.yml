@@ -1,6 +1,6 @@
 logs:
   - name: root
-    level: info
+    level: debug
     formatter: "%d%T%m%n"
     appenders:
       - type: FileLogAppender
@@ -8,7 +8,7 @@ logs:
         formatter: "%d{%Y-%m-%d %H:%M:%S}%T[%p]%T%f{r}:%l:%T%m%n"
         file: logroot.txt
       - type: StdoutLogAppender
-        formatter: "%d{%Y-%m-%d %H:%M:%S} [%P][%c](t:%t)(f:%F) %f:%l%T%m%n"
+        formatter: "%d{%Y-%m-%d %H:%M:%S} [%P][%c](t:%t)(f:%F) %f{r}:%l%T%m%n"
         level: debug
   - name: system
     level: debug

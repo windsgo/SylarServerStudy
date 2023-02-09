@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <iostream>
 
 #include <pthread.h>
 #include <semaphore.h>
@@ -131,12 +132,21 @@ private:
 
 class Mutex {
 public:
+	using Lock = ScopedLockImpl<Mutex>;
     Mutex() {
         pthread_mutex_init(&m_lock, nullptr);
     }
 
     ~Mutex() {
         pthread_mutex_destroy(&m_lock);
+	}
+
+    void lock() {
+        pthread_mutex_lock(&m_lock);
+    }
+
+    void unlock() {
+        pthread_mutex_unlock(&m_lock);
     }
 
 private:
@@ -144,6 +154,31 @@ private:
 
 private:
     SYLAR_DISABLE_COPY(Mutex)
+};
+
+class NullMutex {
+public:
+    using Lock = ScopedLockImpl<NullMutex>;
+    NullMutex() {}
+    ~NullMutex() {}
+    void lock() {}
+    void unlock() {}
+private:
+    SYLAR_DISABLE_COPY(NullMutex)
+};
+
+class NullRWMutex {
+public:
+    using ReadLock = ReadScopedLockImpl<NullRWMutex>;
+    using WriteLock = WriteScopedLockImpl<NullRWMutex>;
+    NullRWMutex() {}
+    ~NullRWMutex() {}
+    void rdlock() {}
+    void wrlock() {}
+    void unlock() {}
+
+private:
+    SYLAR_DISABLE_COPY(NullRWMutex)
 };
 
 class RWMutex {

@@ -1,0 +1,12 @@
+logs:
+  - name: root
+    level: debug
+    formatter: "%d%T%m%n"
+    appenders:
+      - type: FileLogAppender
+        level: debug
+        formatter: "%d{%Y-%m-%d %H:%M:%S}%T %T%m%n"
+        file: mutex.txt
+      - type: StdoutLogAppender
+        formatter: "%d{%Y-%m-%d %H:%M:%S} [%P][%c](t:%t)(f:%F) %f{r}:%l%T%m%n"
+        level: debug

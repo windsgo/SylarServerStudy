@@ -24,7 +24,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 include(sylar/utils.cmake)
 
 add_compile_options(-Wall -Werror)
-add_compile_definitions(__ROOT_DIR__="${PROJECT_SOURCE_DIR}")
+add_compile_definitions(__ROOT_DIR__="${PROJECT_SOURCE_DIR}/")
 
 # YAML-CPP
 find_package(YAML-CPP REQUIRED)

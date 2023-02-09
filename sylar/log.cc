@@ -10,6 +10,9 @@
 
 #include <boost/filesystem.hpp>
 
+#include "unistd.h"
+
+
 #include "config.h"
 
 namespace sylar{
@@ -170,6 +173,8 @@ public:
 
     }
     void format(std::ostream& os, LogEvent::ptr event) override {
+        // ::usleep(10000);
+        // sleep here to test mutex
         os << m_string;
     }
 private:
@@ -245,6 +250,16 @@ std::stringstream& LogEventWrap::getSS() {
     return m_event->getSS();
 }
 
+void LogAppender::setFormatter(LogFormatter::ptr val) {
+    MutexType::Lock lock(m_mutex);
+    m_formatter = val; 
+    m_has_formatter = true;
+}
+
+LogFormatter::ptr LogAppender::getFormatter() const {
+    MutexType::Lock lock(m_mutex);
+    return m_formatter;
+}
 
 Logger::Logger(const std::string& name) 
     : m_name(name) 
@@ -257,6 +272,7 @@ Logger::Logger(const std::string& name)
 }
 
 void Logger::addAppender(LogAppender::ptr appender) {
+    MutexType::Lock lock(m_mutex);
     if (!appender->getFormatter()) {
         appender->setFormatter(m_formatter);
     }
@@ -264,6 +280,7 @@ void Logger::addAppender(LogAppender::ptr appender) {
 }
 
 void Logger::delAppender(LogAppender::ptr appender) {
+    MutexType::Lock lock(m_mutex);
     for (auto it = m_appenders.begin();
             it != m_appenders.end(); ++it) {
         if (*it == appender) {
@@ -278,6 +295,7 @@ void Logger::clearAppenders() {
 }
 
 void Logger::setFormatter(LogFormatter::ptr val) {
+    MutexType::Lock lock(m_mutex);
     if (val->isError())
         return;
     
@@ -285,7 +303,7 @@ void Logger::setFormatter(LogFormatter::ptr val) {
 
     for (auto& i : m_appenders) {
         if (!i->hasFormatter()) {
-            i->setFormatter(val);
+            i->setFormatter(m_formatter);
         }
     }
 }
@@ -304,10 +322,12 @@ void Logger::setFormatter(const std::string& val) {
 }
 
 LogFormatter::ptr Logger::getFormatter() const {
+    MutexType::Lock lock(m_mutex);
     return m_formatter;
 }
 
 std::string Logger::toYamlString() const {
+    MutexType::Lock lock(m_mutex);
     YAML::Node node;
     node["name"] = m_name;
     node["level"] = LogLevel::ToString(m_level);
@@ -326,6 +346,7 @@ std::string Logger::toYamlString() const {
 
 void Logger::log(LogEvent::ptr event) {
     if (event->getLevel() >= m_level) {
+        MutexType::Lock lock(m_mutex);
         if (!m_appenders.empty()) {
             for (auto& i : m_appenders) {
                 i->log(event);
@@ -369,11 +390,13 @@ void Logger::fatal(LogEvent::ptr event) {
 
 void StdoutLogAppender::log(LogEvent::ptr event)  {
     if (event->getLevel() >= m_level) {
+        MutexType::Lock lock(m_mutex);
         std::cout << m_formatter->format(event);
     }
 }
 
 std::string StdoutLogAppender::toYamlString() const {
+    MutexType::Lock lock(m_mutex);
     YAML::Node node;
     node["type"] = "StdoutLogAppender";
     if (m_level != LogLevel::Level::UNKNOW)
@@ -394,6 +417,7 @@ FileLogAppender::FileLogAppender(const std::string& filename)
 }
 
 std::string FileLogAppender::toYamlString() const {
+    MutexType::Lock lock(m_mutex);
     YAML::Node node;
     node["type"] = "FileLogAppender";
     if (m_level != LogLevel::Level::UNKNOW)
@@ -412,6 +436,7 @@ FileLogAppender::~FileLogAppender() {
 }
 
 bool FileLogAppender::reopen() {
+    MutexType::Lock lock(m_mutex);
     if (m_filestream) {
         m_filestream.close();
     }
@@ -423,6 +448,7 @@ bool FileLogAppender::reopen() {
 
 void FileLogAppender::log(LogEvent::ptr event)  {
     if (event->getLevel() >= m_level) {
+        MutexType::Lock lock(m_mutex);
         m_filestream << m_formatter->format(event);
     }
 }
@@ -713,6 +739,7 @@ LoggerManager::LoggerManager() {
 }
 
 Logger::ptr LoggerManager::getLogger(const std::string& name) {
+    MutexType::Lock lock(m_mutex);
     auto it = m_loggers.find(name);
     if (it != m_loggers.end()) {
         return it->second;
@@ -1040,6 +1067,7 @@ void LoggerManager::init() {
 }
 
 std::string LoggerManager::toYamlString() const {
+    MutexType::Lock lock(m_mutex);
     YAML::Node node;
     for (auto& i : m_loggers) {
         node.push_back(YAML::Load(i.second->toYamlString()));
