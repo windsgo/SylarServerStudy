@@ -57,6 +57,10 @@ class MessageFormatItem : public LogFormatter::FormatItem {
 public:
     MessageFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
+#ifdef TEST_LOG_MUTEX_USLEEP
+        // sleep here to test mutex
+        ::usleep(1000);
+#endif // TEST_LOG_MUTEX_USLEEP
         os << event->getContent();
     }
 };
@@ -173,8 +177,10 @@ public:
 
     }
     void format(std::ostream& os, LogEvent::ptr event) override {
-        // ::usleep(10000);
+#ifdef TEST_LOG_MUTEX_USLEEP
         // sleep here to test mutex
+        ::usleep(10000);
+#endif // TEST_LOG_MUTEX_USLEEP
         os << m_string;
     }
 private:
@@ -410,7 +416,7 @@ std::string StdoutLogAppender::toYamlString() const {
 }
 
 FileLogAppender::FileLogAppender(const std::string& filename) 
-    :m_filename(filename) {
+    :m_filename(filename), m_lastTime(time(0)) {
     if (!reopen()) {
         std::cout << "open log file failed:" << filename << std::endl;
     }
@@ -435,19 +441,25 @@ FileLogAppender::~FileLogAppender() {
     m_filestream.close();
 }
 
-bool FileLogAppender::reopen() {
+bool FileLogAppender::reopen(std::ios::openmode openmode/*=std::ios::out*/) {
     MutexType::Lock lock(m_mutex);
     if (m_filestream) {
         m_filestream.close();
     }
 
-    // m_filestream.open(m_filename, std::ios::app);
-    m_filestream.open(m_filename);
+    m_filestream.open(m_filename, openmode);
+    // m_filestream.open(m_filename);
     return !!m_filestream;
 }
 
 void FileLogAppender::log(LogEvent::ptr event)  {
     if (event->getLevel() >= m_level) {
+        uint64_t now = time(0);
+        if (now != m_lastTime) {
+            reopen(std::ios::app); //每隔一秒重新打开，app方式
+            m_lastTime = now;
+        }
+
         MutexType::Lock lock(m_mutex);
         m_filestream << m_formatter->format(event);
     }
@@ -995,7 +1007,7 @@ struct LogIniter {
     LogIniter() {
         SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << "LogIniter() construction";
 
-        g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value)
+        auto key = g_log_defines->addListener([](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value)
         {
             SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << "on_logger_conf_changed!";
             // 对于std::set严格弱序的排列规则
@@ -1056,6 +1068,8 @@ struct LogIniter {
             }
 
         });
+
+        std::cout << "LogIniter g_log_defines listener cb id:" << key << std::endl;
     }
 };
 

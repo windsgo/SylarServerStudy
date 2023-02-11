@@ -7,7 +7,13 @@ set(LIB_SRC
     thread.cc
 )
 
+# add_compile_definitions(SYLAR_LOG_MUTEX) 
+
 add_library(sylar SHARED ${LIB_SRC})
+
+target_compile_definitions(sylar PUBLIC SYLAR_LOG_MUTEX) # SYLAR_LOG_MUTEX or SYLAR_LOG_SPINLOCK or SYLAR_LOG_CASLOCK
+target_compile_definitions(sylar PUBLIC SYLAR_CONFIG_RWMUTEX) # SYLAR_CONFIG_RWMUTEX
+
 target_include_directories(sylar PUBLIC 
     ${PROJECT_SOURCE_DIR}/sylar 
     ${PROJECT_SOURCE_DIR} 

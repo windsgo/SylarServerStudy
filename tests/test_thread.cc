@@ -32,14 +32,14 @@ void fun1() {
 void fun2() {
     while (true) {
         // printf("AAAA");
-        SYLAR_LOG_DEBUG(g_logger) << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"<< " id:" << sylar::GetThreadId();
+        SYLAR_LOG_DEBUG(g_logger) << "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
     }
 }
 
 void fun3() {
     while (true) {
         // printf("BBBB");
-        SYLAR_LOG_DEBUG(g_logger) << "================================================="<< " id:" << sylar::GetThreadId();
+        SYLAR_LOG_DEBUG(g_logger) << "=================================================";
     }
 }
 
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     // t.join();
 
     std::vector<sylar::Thread::ptr> thrs;
-    const int thread_num = 10;
+    const int thread_num = 2;
     for (int i = 0; i < thread_num; ++i) {
         auto thr1 = std::make_shared<sylar::Thread>(&fun2, "name_" + std::to_string(i * 2));
         auto thr2 = std::make_shared<sylar::Thread>(&fun3, "name_" + std::to_string(i * 2 + 1));
@@ -74,6 +74,7 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < thrs.size(); ++i) {
         thrs[i]->join();
     }
+    
 
     SYLAR_LOG_INFO(g_logger) << "count=" << count;
     SYLAR_LOG_INFO(g_logger) << "thread test end";

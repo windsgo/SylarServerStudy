@@ -14,7 +14,7 @@
 
 #include "singleton.h"
 #include "util.h"
-#include "thread.h"
+#include "thread.h" // 线程锁
 
 #define SYLAR_LOG_LEVEL(logger, level)                                               \
     if (logger->getLevel() <= level)                                                 \
@@ -44,6 +44,26 @@
 #define SYLAR_LOG_NAME(name) sylar::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace sylar {
+
+// #define TEST_LOG_NO_MUTEX
+// #define TEST_LOG_MUTEX_USLEEP
+
+// #define SYLAR_LOG_SPINLOCK
+// #define SYLAR_LOG_MUTEX
+
+#ifdef TEST_LOG_NO_MUTEX
+using LogMutex = NullMutex;
+#else // not TEST_LOG_NO_MUTEX
+    #if defined(SYLAR_LOG_MUTEX) 
+    using LogMutex = Mutex;
+    #elif defined(SYLAR_LOG_SPINLOCK)
+    using LogMutex = Spinlock;
+    #elif defined(SYLAR_LOG_CASLOCK)
+    using LogMutex = CASLock;
+    #else // not defined SYLAR_LOG_SPINLOCK and SYLAR_LOG_MUTEX and SYLAR_LOG_CASLOCK
+    static_assert(false);
+    #endif // SYLAR_LOG_SPINLOCK
+#endif // TEST_LOG_NO_MUTEX
 
 class Logger;
 class LoggerManager;
@@ -150,7 +170,7 @@ private:
 class LogAppender {
 public:
     using ptr = std::shared_ptr<LogAppender>;
-    using MutexType = Mutex;
+    using MutexType = LogMutex;
     virtual ~LogAppender() {}
 
     virtual void log(LogEvent::ptr event) = 0;
@@ -175,7 +195,7 @@ class Logger : public std::enable_shared_from_this<Logger> {
     friend class LoggerManager;
 public:
     using ptr = std::shared_ptr<Logger>;
-    using MutexType = Mutex;
+    using MutexType = LogMutex;
     Logger(const std::string& name = "root");
 
     void log(LogEvent::ptr event);
@@ -228,18 +248,19 @@ public:
     void log(LogEvent::ptr event) override;
     std::string toYamlString() const override; 
 
-    bool reopen();
+    bool reopen(std::ios_base::openmode openmode = std::ios::out);
 
     const std::string& getFilename() const { return m_filename; }
 private:
     std::string m_filename;
     std::ofstream m_filestream;
+    uint64_t m_lastTime;
 };
 
 class LoggerManager {
 public:
     LoggerManager();
-    using MutexType = Mutex;
+    using MutexType = LogMutex;
     Logger::ptr getLogger(const std::string& name);
     
     void init();

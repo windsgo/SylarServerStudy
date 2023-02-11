@@ -231,9 +231,10 @@ void test_class() {
             {{"group1", {Person(), Person()}}}
         }, "class vec_map");
 
-    g_person->addListener(10, [](const Person& old_value, const Person& new_value){
+    auto key = g_person->addListener([](const Person& old_value, const Person& new_value){
         SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "g_person changed: old_value=" << old_value.toString() << " new_value=" << new_value.toString();
     });
+    std::cout << "g_person listener cb id=" << key << std::endl;
 
 #define XX_PM(g_var, prefix) \
     {\
@@ -278,18 +279,27 @@ int main(int argc, char** argv) {
     std::cout << "test_config.cc main() entry" << std::endl;
     init();
 
-    // std::cout << "----------test_yaml()----------\n";
-    // test_yaml();
-    // std::cout << "----------test_config()----------\n";
-    // test_config();
-    // std::cout << "----------test_class()----------\n";
-    // test_class();
-
+    std::cout << "----------test_yaml()----------\n";
+    test_yaml();
+    std::cout << "----------test_config()----------\n";
+    test_config();
+    std::cout << "----------test_class()----------\n";
+    test_class();
+    std::cout << "----------test_log()----------\n";
     test_log();
+    std::cout << "----------Visit----------\n";
     
 
     // sylar::Thread t([](){std::cout << "a" << std::endl;}, "aaa");
 
+    
+
+    sylar::Config::Visit([](sylar::ConfigVarBase::ptr var){
+        SYLAR_LOG_INFO(SYLAR_LOG_NAME("system")) << "name=" << var->getName()
+            << " description=" << var->getDescription()
+            << " typename=" << var->getTypeName()
+            << " value=\n" << var->toString();
+    });
 
     // test yaml
 

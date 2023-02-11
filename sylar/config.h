@@ -16,9 +16,19 @@
 #include <yaml-cpp/yaml.h>
 
 #include "log.h"
-
+#include "thread.h" // 线程锁
 
 namespace sylar {
+
+#ifdef TEST_CONFIG_NO_RWMUTEX
+using ConfigRWMutex = NullRWMutex;
+#else // not TEST_CONFIG_NO_RWMUTEX
+    #if defined(SYLAR_CONFIG_RWMUTEX) 
+    using ConfigRWMutex = RWMutex;
+    #else // not defined SYLAR_CONFIG_RWMUTEX
+    static_assert(false);
+    #endif // SYLAR_CONFIG_SPINLOCK
+#endif // TEST_CONFIG_NO_RWMUTEX
 
 class ConfigVarBase {
 public:
@@ -259,6 +269,7 @@ public:
     using type = T;
     using ptr = std::shared_ptr<ConfigVar>;
     using on_change_cb = std::function<void (const T&old_value, const T& new_value)>;
+    using RWMutexType = ConfigRWMutex;
 
     ConfigVar(const std::string& name, const T& default_value, const std::string& description = "") 
         : ConfigVarBase(name, description), m_val(default_value) {
@@ -266,6 +277,7 @@ public:
 
     std::string toString() override {
         try {
+            RWMutexType::ReadLock lock(m_mutex);
             // return boost::lexical_cast<std::string>(m_val);
             return ToStr()(m_val);
         }
@@ -280,7 +292,7 @@ public:
     bool fromString(const std::string &val) override {
         try {
             // m_val = boost::lexical_cast<T>(val);
-            setValue(FromStr()(val));
+            setValue(FromStr()(val)); // 有锁
             return true;
         }
         catch (std::exception &e)
@@ -291,34 +303,48 @@ public:
         return false;
     }
 
-    const T &getValue() const { return m_val; }
+    const T &getValue() const { 
+        RWMutexType::ReadLock lock(m_mutex);
+        return m_val; 
+    }
     void setValue(const T &v) { 
-        if (v == m_val) {
-            return;
-        }
+        {
+            RWMutexType::ReadLock lock(m_mutex);
+            if (v == m_val) {
+                return;
+            }
 
-        for (auto& i : m_cbs) {
-            i.second(m_val, v); // 回调，通知观察者配置发生改变
+            for (auto& i : m_cbs) {
+                i.second(m_val, v); // 回调，通知观察者配置发生改变
+            }
         }
-
+        
+        RWMutexType::WriteLock lock(m_mutex);
         m_val = v;
     }
     std::string getTypeName() const { return typeid(T).name(); }
 
-    void addListener(uint64_t key, on_change_cb cb) {
-        m_cbs[key] = cb;
+    uint64_t addListener(on_change_cb cb) {
+        static uint64_t s_fun_id = 0;
+        RWMutexType::WriteLock lock(m_mutex);
+        ++s_fun_id; 
+        m_cbs[s_fun_id] = cb;
+        return s_fun_id;
     }
 
     void delListener(uint64_t key) {
+        RWMutexType::WriteLock lock(m_mutex);
         m_cbs.erase(key);
     }
 
     on_change_cb getListener(uint64_t key) const {
+        RWMutexType::ReadLock lock(m_mutex);
         auto it = m_cbs.find(key);
         return it == m_cbs.end() ? nullptr : it->second;
     }
 
     void clearListener() {
+        RWMutexType::WriteLock lock(m_mutex);
         m_cbs.clear();
     }
 
@@ -326,11 +352,13 @@ private:
     T m_val;
     // 变更回调函数组，uint64_t key，要求唯一，一般可以用hash
     std::map<uint64_t, on_change_cb> m_cbs;
+    mutable RWMutexType m_mutex;
 };
 
 class Config {
 public:
     using ConfigVarMap = std::unordered_map<std::string, ConfigVarBase::ptr>;
+    using RWMutexType = ConfigRWMutex;
     
     template<typename T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name,
@@ -349,6 +377,7 @@ public:
         }
 
         auto v = std::make_shared<ConfigVar<T>>(name, default_value, description);
+        RWMutexType::WriteLock lock(GetMutex());
         GetDatas()[name] = v; // equal to the following line
         // s_datas[name] = std::dynamic_pointer_cast<ConfigVarBase>(v);
 
@@ -357,6 +386,7 @@ public:
 
     template<typename T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
+        RWMutexType::ReadLock lock(GetMutex());
         auto it = GetDatas().find(name);
         if (it == GetDatas().end()) {
             return nullptr;
@@ -379,6 +409,8 @@ public:
 
     static ConfigVarBase::ptr LookupBase(const std::string &name);
 
+    static void Visit(std::function<void(ConfigVarBase::ptr)> vb);
+
 private:
     Config() = default;
     Config(const Config &) = delete;
@@ -387,6 +419,11 @@ private:
     static ConfigVarMap& GetDatas() {
         static ConfigVarMap s_datas;
         return s_datas;
+    }
+
+    static RWMutexType& GetMutex() {
+        static RWMutexType s_mutex;
+        return s_mutex;
     }
 };
 }

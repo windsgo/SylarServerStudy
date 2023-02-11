@@ -52,8 +52,17 @@ void Config::LoadFromYaml(const YAML::Node &root) {
 }
 
 ConfigVarBase::ptr Config::LookupBase(const std::string &name) {
+    RWMutexType::ReadLock lock(GetMutex());
     auto it = GetDatas().find(name);
     return (it == GetDatas().end() ? nullptr : it->second);
+}
+
+void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb) {
+    RWMutexType::ReadLock lock(GetMutex());
+    auto& m = GetDatas();
+    for (auto it = m.begin(); it != m.end(); ++it) {
+        cb(it->second);
+    }
 }
 
 }

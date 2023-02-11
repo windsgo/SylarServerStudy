@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdint.h>
+#include <atomic>
 
 #include "singleton.h" // disable copy
 
@@ -154,6 +155,58 @@ private:
 
 private:
     SYLAR_DISABLE_COPY(Mutex)
+};
+
+class Spinlock {
+public:
+    using Lock = ScopedLockImpl<Spinlock>;
+    Spinlock() {
+        pthread_spin_init(&m_lock, 0);
+    }
+
+    ~Spinlock() {
+        pthread_spin_destroy(&m_lock);
+    }
+
+    void lock() {
+        pthread_spin_lock(&m_lock);
+    }
+
+    void unlock() {
+        pthread_spin_unlock(&m_lock);
+    }
+
+private:    
+    pthread_spinlock_t m_lock; 
+
+private:
+    SYLAR_DISABLE_COPY(Spinlock)
+};
+
+class CASLock {
+public:
+    using Lock = ScopedLockImpl<CASLock>;
+    CASLock() {
+        m_flag.clear();
+    }
+
+    ~CASLock() {
+
+    }
+
+    void lock() {
+        while (std::atomic_flag_test_and_set_explicit(&m_flag, std::memory_order_acquire));
+    }
+
+    void unlock() {
+        std::atomic_flag_clear_explicit(&m_flag, std::memory_order_release);
+    }
+
+private:
+    volatile std::atomic_flag m_flag;
+
+private:
+    SYLAR_DISABLE_COPY(CASLock)
 };
 
 class NullMutex {
