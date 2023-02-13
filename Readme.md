@@ -21,12 +21,35 @@ A Repo with sylar network server study codes, including self-optimized codes.
     - ```USE_BOOST_BACKTRACE=ON```
 
     If not compiled with debug info, we use c api ```::backtrace``` and ```::backtrace_symbol``` to get backtrace info.
+    
+    If we use c api ```::backtrace``` and ```::backtrace_symbol```, we get things like:
+    
+    ```bash
+    2023-02-13 17:59:54 [ERROR][root](t:146705)(f:0) tests/test_util.cc:11  ASSERTION: false
+    backtrace:
+     -- 0# bin/test_util(+0x2f93) [0x55f682682f93]
+     -- 1# bin/test_util(+0x273f) [0x55f68268273f]
+     -- 2# /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf3) [0x7f781e0c5083]
+     -- 3# bin/test_util(+0x29be) [0x55f6826829be]
+    ```
+    
+    But if we use ```boost::stacktrace``` and ```libbacktrace```, we can get prettier and more readable backtrace as following:
+    
+    ```bash
+    2023-02-13 18:01:46 [ERROR][root](t:146991)(f:0) tests/test_util.cc:11  ASSERTION: false
+    backtrace:
+     -- 0# test_assert() at /home/windsgo/Documents/codes/SylarServerStudy/tests/test_util.cc:11
+     -- 1# main at /home/windsgo/Documents/codes/SylarServerStudy/tests/test_util.cc:23
+     -- 2# __libc_start_main at ../csu/libc-start.c:342
+     -- 3# _start in bin/test_util
+    ```
 
 - boost
     
     - ```boost::lexical_cast```
     - ```boost::filesystem```
     - ```boost::stacktrace```(if enabled "```Debug```" or "```RelWithDebInfo```")
+    
     
     ```bash
     sudo apt-get install libboost-all-dev
