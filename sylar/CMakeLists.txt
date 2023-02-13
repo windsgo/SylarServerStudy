@@ -23,9 +23,10 @@ target_include_directories(sylar PUBLIC
     ${YAML_CPP_INCLUDE_DIR}
     ${Boost_INCLUDE_DIR}
 )
+
 target_link_libraries(sylar 
     ${YAML_CPP_LIBRARIES} 
     ${Boost_LIBRARIES} 
     pthread 
-    dl backtrace # used in posix platforms, not msvc; libbacktrace used to get lines 
+    ${USE_BOOST_STACKTRACE_LINK_LIBRARIES}# used in posix platforms, not msvc; libbacktrace used to get lines 
 )
