@@ -12,9 +12,11 @@ A Repo with sylar network server study codes, including self-optimized codes.
 
 ## External Dependencies
 
-- libbacktrace(if enabled "```Debug```" or "```RelWithDebInfo```")
+- libbacktrace and libdl (if enabled "```Debug```" or "```RelWithDebInfo```")
 
-    a linux built-in library
+    ```libbacktrace``` and ```libdl``` are a linux built-in libraries.
+    
+    > Note: ```libdl``` should be linked whenever ```boost::stacktrace``` is used with ```gcc```
     
     It is used and linked by ```libsylar``` while 
     - "```Debug```" or "```RelWithDebInfo```" is configured
