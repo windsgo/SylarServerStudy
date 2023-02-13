@@ -417,7 +417,14 @@ std::string StdoutLogAppender::toYamlString() const {
 
 FileLogAppender::FileLogAppender(const std::string& filename) 
     :m_filename(filename), m_lastTime(time(0)) {
-    if (!reopen()) {
+
+    if (
+#ifdef SYLAR_LOG_FILE_APPEND
+        !reopen(std::ios::app)
+#else
+        !reopen(std::ios::out)
+#endif // SYLAR_LOG_FILE_APPEND
+        ) {
         std::cout << "open log file failed:" << filename << std::endl;
     }
 }
@@ -462,6 +469,7 @@ void FileLogAppender::log(LogEvent::ptr event)  {
 
         MutexType::Lock lock(m_mutex);
         m_filestream << m_formatter->format(event);
+        m_filestream.flush();
     }
 }
 
@@ -736,12 +744,12 @@ LoggerManager::LoggerManager() {
 
     // root日志器的初始化
     auto appender = std::make_shared<StdoutLogAppender>();
-    auto formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%P]%T[%c](dft)%T%f{s}:%l%T%m%n");
+    auto formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%P]%T[%c](dft)%T%f{}:%l%T%m%n");
     appender->setFormatter(formatter);
     m_root->addAppender(appender);
 
     auto file_appender = std::make_shared<FileLogAppender>("root.log");
-    auto file_formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T[%p]%T%f{s}:%l(dft):%T%m%n");
+    auto file_formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c](dft)%T%f{}:%l%T%m%n");
     file_appender->setFormatter(file_formatter);
     m_root->addAppender(file_appender);
 
@@ -1005,6 +1013,8 @@ public:
 
 struct LogIniter {
     LogIniter() {
+        SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "New Launch\
+            \n===============================================================\n";
         SYLAR_LOG_DEBUG(SYLAR_LOG_ROOT()) << "LogIniter() construction";
 
         auto key = g_log_defines->addListener([](const std::set<LogDefine>& old_value, const std::set<LogDefine>& new_value)

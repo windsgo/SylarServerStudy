@@ -26,6 +26,9 @@ include(sylar/utils.cmake)
 add_compile_options(-Wall -Werror)
 add_compile_definitions(__ROOT_DIR__="${PROJECT_SOURCE_DIR}/")
 
+# options
+option(USE_BOOST_STACKTRACE "use boost::stacktrace and libbacktrace to get lines while enabling debug compilings" ON)
+
 # YAML-CPP
 find_package(YAML-CPP REQUIRED)
 print_variable(YAML_CPP_INCLUDE_DIR)
@@ -37,6 +40,20 @@ find_package(Boost REQUIRED COMPONENTS filesystem)
 print_variable(Boost_INCLUDE_DIR)
 print_variable(Boost_LIBRARIES)
 print_variable(Boost_VERSION)
+
+# check if use libbacktrace and boost::stacktrace to print lines
+message(STATUS "Checking if is going to use boost::backtrace")
+if ((${CMAKE_BUILD_TYPE} STREQUAL Release) OR (${CMAKE_BUILD_TYPE} STREQUAL MinSizeRel))
+    set(USE_BOOST_STACKTRACE OFF)
+endif()
+print_variable(CMAKE_BUILD_TYPE)
+print_variable(USE_BOOST_STACKTRACE)
+if (USE_BOOST_STACKTRACE)
+    add_compile_definitions(BOOST_STACKTRACE_USE_BACKTRACE) 
+    message(STATUS "Result: USE boost::stacktrace and libbacktrace")
+endif()
+message(STATUS "Checked")
+
 
 add_subdirectory(sylar)
 

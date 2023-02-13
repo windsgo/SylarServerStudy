@@ -6,7 +6,7 @@ logs:
       - type: FileLogAppender
         level: debug
         formatter: "%d{%Y-%m-%d %H:%M:%S}%T[%p]%T%f{r}:%l:%T%m%n"
-        file: logroot.txt
+        file: root.log
       - type: StdoutLogAppender
         formatter: "%d{%Y-%m-%d %H:%M:%S} [%P][%c](t:%t)(f:%F) %f{r}:%l%T%m%n"
         level: debug
@@ -17,7 +17,7 @@ logs:
       - type: FileLogAppender
         level: debug
         formatter: "%d{%Y-%m-%d %H:%M:%S}%T[%p]%T%f{r}:%l:%T%m%n"
-        file: logsys.txt
+        file: system.log
       - type: StdoutLogAppender
         formatter: "%d{%Y-%m-%d %H:%M:%S} [%P] [%c]%T%t %F%T%f:%l%T%m%n"
         level: debug

@@ -31,3 +31,13 @@ target_link_libraries(test_thread
     ${YAML_CPP_LIBRARIES}
     pthread
 )
+
+add_executable(test_util test_util.cc)
+add_dependencies(test_util sylar)
+target_include_directories(test_util PUBLIC 
+    ${PROJECT_SOURCE_DIR}
+)
+target_link_libraries(test_util 
+    sylar
+    pthread
+)
