@@ -12,13 +12,27 @@ A Repo with sylar network server study codes, including self-optimized codes.
 
 ## External Dependencies
 
-- boost
+- libbacktrace(if enabled "```Debug```" or "```RelWithDebInfo```")
 
+    a linux built-in library
+    
+    It is used and linked by ```libsylar``` while 
+    - "```Debug```" or "```RelWithDebInfo```" is configured
+    - ```USE_BOOST_BACKTRACE=ON```
+
+    If not compiled with debug info, we use c api ```::backtrace``` and ```::backtrace_symbol``` to get backtrace info.
+
+- boost
+    
+    - ```boost::lexical_cast```
+    - ```boost::filesystem```
+    - ```boost::stacktrace```(if enabled "```Debug```" or "```RelWithDebInfo```")
+    
     ```bash
     sudo apt-get install libboost-all-dev
     ```
 
-- yaml-cpp (pre-compiled in 3rd_party)
+- yaml-cpp
 
     ```bash
     sudo apt-get install libyaml-cpp-dev
