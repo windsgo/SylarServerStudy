@@ -1,6 +1,7 @@
 # sylar/CMakeLists.txt
 
 set(LIB_SRC
+    fiber.cc
     log.cc
     util.cc
     config.cc

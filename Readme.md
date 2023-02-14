@@ -26,7 +26,7 @@ A Repo with sylar network server study codes, including self-optimized codes.
     
     If we use c api ```::backtrace``` and ```::backtrace_symbol```, we get things like:
     
-    ```bash
+    ```
     2023-02-13 17:59:54 [ERROR][root](t:146705)(f:0) tests/test_util.cc:11  ASSERTION: false
     backtrace:
      -- 0# bin/test_util(+0x2f93) [0x55f682682f93]
@@ -37,7 +37,7 @@ A Repo with sylar network server study codes, including self-optimized codes.
     
     But if we use ```boost::stacktrace``` and ```libbacktrace```, we can get prettier and more readable backtrace as following:
     
-    ```bash
+    ```
     2023-02-13 18:01:46 [ERROR][root](t:146991)(f:0) tests/test_util.cc:11  ASSERTION: false
     backtrace:
      -- 0# test_assert() at /home/windsgo/Documents/codes/SylarServerStudy/tests/test_util.cc:11
