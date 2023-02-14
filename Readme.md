@@ -1,4 +1,20 @@
-# sylar network server study code
+<div align="center">
+
+# Sylar Network Server Study Code
+
+<br>
+<div>
+    <img alt="C++" src="https://img.shields.io/badge/c++-17-%2300599C?logo=cplusplus">
+    <img alt="platform" src="https://img.shields.io/badge/platform-Linux-blueviolet">
+</div>
+<div>
+    <!-- <img alt="license" src="https://img.shields.io/github/license/windsgo/SylarServerStudy"> -->
+    <img alt="commit" src="https://img.shields.io/github/commit-activity/m/windsgo/SylarServerStudy?color=%23ff69b4">
+    <img alt="stars" src="https://img.shields.io/github/stars/windsgo/SylarServerStudy?style=social">
+</div>
+<br>
+
+</div>
 
 ## Introduction
 
