@@ -5,6 +5,7 @@
 #include <sys/syscall.h>
 #include <execinfo.h>
 
+#include "fiber.h"
 #include "log.h"
 
 #ifdef BOOST_STACKTRACE_USE_BACKTRACE
@@ -26,7 +27,7 @@ pid_t GetThreadId() {
 }
 
 uint32_t GetFiberId() {
-    return 0;
+    return sylar::Fiber::GetFiberId();
 }
 
 void Backtrace(std::vector<std::string> &bt, [[maybe_unused]] int size, int skip) {

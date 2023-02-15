@@ -41,3 +41,13 @@ target_link_libraries(test_util
     sylar
     pthread
 )
+
+add_executable(test_fiber test_fiber.cc)
+add_dependencies(test_fiber sylar)
+target_include_directories(test_fiber PUBLIC 
+    ${PROJECT_SOURCE_DIR}
+)
+target_link_libraries(test_fiber
+    sylar
+    pthread
+)

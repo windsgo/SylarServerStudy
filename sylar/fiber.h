@@ -3,7 +3,6 @@
 #include <ucontext.h>
 #include <memory>
 #include <functional>
-#include <ucontext.h>
 
 #include "thread.h"
 
@@ -41,6 +40,8 @@ public:
     // 切换到后台
     void swapOut();
 
+    uint64_t getId() const { return m_id; }
+
 public:
 	// 设置当前协程
 	static void SetThis(Fiber* f);
@@ -58,6 +59,8 @@ public:
     static uint64_t TotalFibers();
 
    	static void MainFunc(); 
+    
+    static uint64_t GetFiberId();
 
 private:
 	uint64_t m_id = 0;

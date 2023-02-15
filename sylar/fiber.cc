@@ -1,9 +1,9 @@
 #include "fiber.h"
 #include "config.h"
 #include "macro.h"
-#include <atomic>
-#include <ucontext.h>
 #include "log.h"
+
+#include <atomic>
 
 namespace sylar
 {
@@ -42,6 +42,8 @@ Fiber::Fiber() {
 	}
 
     ++s_fiber_count;
+
+    SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber main_fiber";
 }
 
 Fiber::Fiber(std::function<void ()> cb, size_t stactsize) 
@@ -59,6 +61,8 @@ Fiber::Fiber(std::function<void ()> cb, size_t stactsize)
 	m_ctx.uc_stack.ss_size = m_stacksize;
 
 	makecontext(&m_ctx, &Fiber::MainFunc, 0);
+
+    SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber id=" << m_id;
 }  
 
 Fiber::~Fiber() {
@@ -77,6 +81,8 @@ Fiber::~Fiber() {
 			SetThis(nullptr);
 		}
 	}
+    
+    SYLAR_LOG_DEBUG(g_logger) << "Fiber::~Fiber id=" << m_id;
 }
 
 void Fiber::reset(std::function<void ()> cb) {
@@ -107,6 +113,7 @@ void Fiber::swapIn() {
 
 void Fiber::swapOut() {
     SetThis(t_threadFiber.get());
+    // m_state = State::HOLD;
     if (swapcontext(&m_ctx, &t_threadFiber->m_ctx)) {
         SYLAR_ASSERT2(false, "swapcontext");
     }    
@@ -163,6 +170,13 @@ void Fiber::MainFunc() {
     }
 }
 
+uint64_t Fiber::GetFiberId() {
+    if (t_fiber) {
+        return t_fiber->getId();
+    }
+
+    return 0;
+}
 
 
 } // namespace sylar
