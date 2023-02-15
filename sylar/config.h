@@ -322,7 +322,7 @@ public:
         RWMutexType::WriteLock lock(m_mutex);
         m_val = v;
     }
-    std::string getTypeName() const { return typeid(T).name(); }
+    std::string getTypeName() const override { return typeid(T).name(); }
 
     uint64_t addListener(on_change_cb cb) {
         static uint64_t s_fun_id = 0;

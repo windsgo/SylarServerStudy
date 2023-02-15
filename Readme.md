@@ -64,9 +64,9 @@ A Repo with sylar network server study codes, including self-optimized codes.
 
 - boost
     
-    - ```boost::lexical_cast```
+    - ```boost::lexical_cast```(header only)
     - ```boost::filesystem```
-    - ```boost::stacktrace```(if enabled "```Debug```" or "```RelWithDebInfo```")
+    - ```boost::stacktrace```(header only)(if enabled "```Debug```" or "```RelWithDebInfo```")
     
     
     ```bash
@@ -76,12 +76,12 @@ A Repo with sylar network server study codes, including self-optimized codes.
 - yaml-cpp
 
     ```bash
-    sudo apt-get install libyaml-cpp-dev
+    sudo apt-get install libyaml-cpp-dev # recommended on ubuntu
     ```
     or
     ```
     git clone https://github.com/jbeder/yaml-cpp.git
     mkdir build && cd build
-    cmake .. -DCMALE_INSTALL_PREFIX=/usr/local
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
     make && make install
     ```
