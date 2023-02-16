@@ -5,14 +5,17 @@
 #include <sys/syscall.h>
 #include <execinfo.h>
 
+
 #include "fiber.h"
 #include "log.h"
 
 #ifdef BOOST_STACKTRACE_USE_BACKTRACE
 #include <boost/stacktrace.hpp>
+#else
+#include <backtrace.h>
 #endif
 
-static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+static ::sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
 namespace sylar {
 

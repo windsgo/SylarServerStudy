@@ -1,7 +1,6 @@
 #pragma once
 
 #include <pthread.h>
-#include <backtrace.h>
 #include <stdint.h>
 
 #include <vector>

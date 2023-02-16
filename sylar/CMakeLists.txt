@@ -6,6 +6,7 @@ set(LIB_SRC
     util.cc
     config.cc
     thread.cc
+    scheduler.cc
 )
 
 # add_compile_definitions(SYLAR_LOG_MUTEX) 
@@ -31,6 +32,8 @@ target_include_directories(sylar PUBLIC
     ${YAML_CPP_INCLUDE_DIR}
     ${Boost_INCLUDE_DIR}
 )
+
+target_include_directories(sylar SYSTEM BEFORE PUBLIC /usr/include/../lib/gcc/x86_64-linux-gnu/9/include/)
 
 target_link_libraries(sylar 
     ${YAML_CPP_LIBRARIES} 

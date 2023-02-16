@@ -25,7 +25,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(sylar/utils.cmake)
 
-add_compile_options(-Wall -Werror)
+# add_compile_options(-Wall -Werror)
 add_compile_definitions(__ROOT_DIR__="${PROJECT_SOURCE_DIR}/")
 
 # options
@@ -57,7 +57,6 @@ if (USE_BOOST_STACKTRACE)
     message(STATUS "Result: USE boost::stacktrace and libbacktrace")
 endif()
 message(STATUS "Checked")
-
 
 add_subdirectory(sylar)
 

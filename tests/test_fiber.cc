@@ -1,4 +1,4 @@
-#include "../sylar/sylar.h"
+#include "sylar.h"
 #include <memory>
 #include <string>
 #include <vector>
