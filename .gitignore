@@ -5,5 +5,8 @@ bin/
 .vscode
 .vscode/**
 
+.clangd
+.clangd/**
+
 *.log
 *.txt
