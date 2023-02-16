@@ -8,7 +8,7 @@ logs:
         formatter: "%d{%Y-%m-%d %H:%M:%S}%T[%p]%T%f{r}:%l:%T%m%n"
         file: root.log
       - type: StdoutLogAppender
-        formatter: "%d{%Y-%m-%d %H:%M:%S} [%P][%c](t:%t)(f:%F) %f{r}:%l%T%m%n"
+        formatter: "%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%P]%T[%c]%T%f{r}:%l%T%m%n"
         level: debug
   - name: system
     level: debug
@@ -19,5 +19,5 @@ logs:
         formatter: "%d{%Y-%m-%d %H:%M:%S}%T[%p]%T%f{r}:%l:%T%m%n"
         file: system.log
       - type: StdoutLogAppender
-        formatter: "%d{%Y-%m-%d %H:%M:%S} [%P] [%c]%T%t %F%T%f:%l%T%m%n"
+        formatter: "%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%P]%T[%c]%T%f{r}:%l%T%m%n"
         level: debug

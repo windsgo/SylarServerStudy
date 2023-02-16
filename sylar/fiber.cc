@@ -2,6 +2,7 @@
 #include "config.h"
 #include "macro.h"
 #include "log.h"
+#include "util.h"
 
 #include <atomic>
 
@@ -35,7 +36,7 @@ using StackAllocator = MallocStackAllocator;
 Fiber::Fiber() {
 	// 一定是main fiber 的构造
 	m_state = State::EXEC;
-	SetThis(this);
+    Fiber::SetThis(this);
 
 	if (getcontext(&m_ctx)) {
 	    SYLAR_ASSERT2(false, "getcontext");	
@@ -43,12 +44,24 @@ Fiber::Fiber() {
 
     ++s_fiber_count;
 
-    SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber main_fiber";
+    SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber main_fiber id=" << m_id;
 }
 
 Fiber::Fiber(std::function<void ()> cb, size_t stactsize) 
     :m_id(++s_fiber_id)
      , m_cb(cb) {
+    
+    // 主协程不存在则创建主协程
+    if (!t_threadFiber) {
+        Fiber::GetThis();
+    }
+
+    // 此时主协程一定存在
+    SYLAR_ASSERT(t_threadFiber);
+        
+    // 子协程构造一定在主协程完成，即当前协程一定是主协程
+    SYLAR_ASSERT2(t_fiber == t_threadFiber.get(), "child fiber should be constructed in main fiber");
+
 	++s_fiber_count;
     m_stacksize = stactsize ? stactsize : g_fiber_stack_size->getValue();
 
@@ -56,7 +69,12 @@ Fiber::Fiber(std::function<void ()> cb, size_t stactsize)
     if (getcontext(&m_ctx)) {
 	    SYLAR_ASSERT2(false, "getcontext");	
     }
-	m_ctx.uc_link = nullptr;
+
+#ifdef SYLAR_FIBER_RETURN_USE_UCLINK
+	m_ctx.uc_link = &t_threadFiber->m_ctx;
+#else // not SYLAR_FIBER_RETURN_USE_UCLINK
+    m_ctx.uc_link = nullptr;
+#endif // SYLAR_FIBER_RETURN_USE_UCLINK
 	m_ctx.uc_stack.ss_sp = m_stack;
 	m_ctx.uc_stack.ss_size = m_stacksize;
 
@@ -78,11 +96,12 @@ Fiber::~Fiber() {
 
 		Fiber* cur = t_fiber;
 		if (cur == this) {
-			SetThis(nullptr);
+            Fiber::SetThis(nullptr);
 		}
 	}
     
     SYLAR_LOG_DEBUG(g_logger) << "Fiber::~Fiber id=" << m_id;
+    // std::cout << sylar::BacktraceToString(100) << std::endl;
 }
 
 void Fiber::reset(std::function<void ()> cb) {
@@ -94,8 +113,12 @@ void Fiber::reset(std::function<void ()> cb) {
         SYLAR_ASSERT2(false, "getcontext");
     }
 
-	m_ctx.uc_link = nullptr;
-	m_ctx.uc_stack.ss_sp = m_stack;
+#ifdef SYLAR_FIBER_RETURN_USE_UCLINK
+	m_ctx.uc_link = &t_threadFiber->m_ctx;
+#else // not SYLAR_FIBER_RETURN_USE_UCLINK
+    m_ctx.uc_link = nullptr;
+#endif // SYLAR_FIBER_RETURN_USE_UCLINK
+    m_ctx.uc_stack.ss_sp = m_stack;
 	m_ctx.uc_stack.ss_size = m_stacksize;
     
     makecontext(&m_ctx, &Fiber::MainFunc, 0);
@@ -103,7 +126,7 @@ void Fiber::reset(std::function<void ()> cb) {
 }
 
 void Fiber::swapIn() {
-    SetThis(this);
+    Fiber::SetThis(this);
     SYLAR_ASSERT(m_state != State::EXEC);
     m_state = State::EXEC;
     if (swapcontext(&t_threadFiber->m_ctx, &m_ctx)) {
@@ -112,7 +135,7 @@ void Fiber::swapIn() {
 }
 
 void Fiber::swapOut() {
-    SetThis(t_threadFiber.get());
+    Fiber::SetThis(t_threadFiber.get());
     // m_state = State::HOLD;
     if (swapcontext(&m_ctx, &t_threadFiber->m_ctx)) {
         SYLAR_ASSERT2(false, "swapcontext");
@@ -139,13 +162,13 @@ Fiber::ptr Fiber::GetThis() {
 }
 
 void Fiber::YieldToReady() {
-    Fiber::ptr cur = GetThis();
+    Fiber::ptr cur = Fiber::GetThis();
     cur->m_state = State::READY;
     cur->swapOut();
 }
 
 void Fiber::YieldToHold() {
-    Fiber::ptr cur = GetThis();
+    Fiber::ptr cur = Fiber::GetThis();
     cur->m_state = State::HOLD;
     cur->swapOut();
 }
@@ -155,7 +178,7 @@ uint64_t Fiber::TotalFibers() {
 }
 
 void Fiber::MainFunc() {
-    Fiber::ptr cur = GetThis();
+    Fiber::ptr cur = Fiber::GetThis();
     SYLAR_ASSERT(cur);
     try {
         cur->m_cb();
@@ -168,6 +191,27 @@ void Fiber::MainFunc() {
         cur->m_state = State::EXCEP;
         SYLAR_LOG_ERROR(g_logger) << "Fiber Except";
     }
+
+#ifdef SYLAR_FIBER_RETURN_USE_UCLINK
+    // by setting m_ctx->uc_link = &t_threadFiber->m_ctx at construction 
+    // Way 1
+    // do not need to do anything more here just
+    SetThis(t_threadFiber.get());
+    // let it returns
+#else // not SYLAR_FIBER_RETURN_USE_UCLINK
+    // Way 2
+    // usr swapOut to force fiber to return to the main fiber
+   
+    auto raw_ptr = cur.get();
+    // decrease the reference count of t_fiber 's shared_ptr, for auto destrcution later
+    cur.reset(); 
+    raw_ptr->swapOut();
+    
+    // won't return here again
+    SYLAR_ASSERT2(false, "never reach after swapout");
+
+    // this fiber should not be swapIn to here again
+#endif
 }
 
 uint64_t Fiber::GetFiberId() {

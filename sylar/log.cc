@@ -1,6 +1,7 @@
 #include "log.h"
 
 #include <map>
+#include <string>
 #include <unordered_map>
 #include <functional>
 
@@ -102,6 +103,14 @@ public:
     FiberIDFormatItem([[maybe_unused]] const std::string& str = "") {}
     void format(std::ostream& os, LogEvent::ptr event) override {
         os << event->getFiberId();
+    }
+};
+
+class ThreadNameFormatItem : public LogFormatter::FormatItem {
+public:
+    ThreadNameFormatItem([[maybe_unused]] const std::string& str = "") {}
+    void format(std::ostream& os, LogEvent::ptr event) override {
+        os << event->getThreadName();
     }
 };
 
@@ -215,11 +224,13 @@ public:
     }
 };
 
-LogEvent::LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, const char* file, int32_t line, uint32_t elapse
-    , uint32_t thread_id, uint32_t fiber_id, uint64_t time) 
+LogEvent::LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, 
+        const char* file, int32_t line, uint32_t elapse,
+        uint32_t thread_id, uint32_t fiber_id, uint64_t time,
+        const std::string& thread_name) 
     : m_file(file), m_line(line), m_elapse(elapse)
     , m_threadId(thread_id), m_fiberId(fiber_id), m_time(time)
-    , m_logger(logger), m_level(level) {
+    , m_logger(logger), m_level(level), m_threadName(thread_name) {
 
 }
 
@@ -270,7 +281,7 @@ LogFormatter::ptr LogAppender::getFormatter() const {
 Logger::Logger(const std::string& name) 
     : m_name(name) 
     , m_level(LogLevel::DEBUG){
-    m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));
+    m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));
 
     // if (name == "root") {
     //     m_appenders.push_back(std::make_shared<StdoutLogAppender>());
@@ -700,7 +711,8 @@ void LogFormatter::init() {
         XX(l, LineFormatItem),
         XX(T, TabFormatItem),
         XX(F, FiberIDFormatItem),
-        XX(P, ColorLevelFormatItem)
+        XX(P, ColorLevelFormatItem),
+        XX(N, ThreadNameFormatItem)
 
 #undef XX
     };

@@ -34,13 +34,14 @@ public:
     // INIT, TERM
     void reset(std::function<void ()> cb);
 
+    uint64_t getId() const { return m_id; }
+    
     // 切换到此协程
     void swapIn();
 
-    // 切换到后台
+private:
+    // 切换到后台，不应被调用，因为在其中不会去设置换出后的状态
     void swapOut();
-
-    uint64_t getId() const { return m_id; }
 
 public:
 	// 设置当前协程

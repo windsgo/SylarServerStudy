@@ -12,11 +12,18 @@ set(LIB_SRC
 
 add_library(sylar SHARED ${LIB_SRC})
 
-target_compile_definitions(sylar PUBLIC SYLAR_LOG_MUTEX) # SYLAR_LOG_MUTEX or SYLAR_LOG_SPINLOCK or SYLAR_LOG_CASLOCK
-target_compile_definitions(sylar PUBLIC SYLAR_CONFIG_RWMUTEX) # SYLAR_CONFIG_RWMUTEX
+# SYLAR_LOG_MUTEX or SYLAR_LOG_SPINLOCK or SYLAR_LOG_CASLOCK
+target_compile_definitions(sylar PUBLIC SYLAR_LOG_MUTEX) 
+
+# SYLAR_CONFIG_RWMUTEX
+target_compile_definitions(sylar PUBLIC SYLAR_CONFIG_RWMUTEX) 
 
 # SYLAR_LOG_FILE_APPEND, if defined, filelog will append to existing file
 target_compile_definitions(sylar PUBLIC SYLAR_LOG_FILE_APPEND) 
+
+# SYLAR_FIBER_RETURN_USE_UCLINK
+# if defined, use ucb->uc_link to return fiber to main_fiber
+target_compile_definitions(sylar PUBLIC SYLAR_FIBER_RETURN_USE_UCLINK)
 
 target_include_directories(sylar PUBLIC 
     ${PROJECT_SOURCE_DIR}/sylar 
